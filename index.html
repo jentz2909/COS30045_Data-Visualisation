@@ -1,100 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="Data Visualisation" />
+    <meta
+      name="keywords"
+      content="HTML, CSS, JS, D3, Data Visualisation Project"
+    />
+    <meta name="author" content="Tan Voon Tao, Jia Zheng Chua" />
+    <title>Data Visualisation Project</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="description" content="Data Visualisation" />
-  <meta name="keywords" content="HTML, CSS, JS, D3, Data Visualisation Project" />
-  <meta name="author" content="Tan Voon Tao, Jia Zheng Chua" />
-  <title>Data Visualisation Project</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous" />
+    <script src="https://d3js.org/d3.v6.min.js"></script>
 
-  <script src="https://d3js.org/d3.v6.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css"
+    />
 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+      /* Basic styles for the SVG canvas and paths */
+      /* svg {
+        border: 1px solid black;
+      } */
 
-  <style>
+      .popover {
+        max-width: 450px;
+        /* width: 100%; */
+      }
+      path {
+        stroke: black;
+        fill: none;
+      }
 
-  </style>
-</head>
+      .popover svg {
+        display: block;
+        margin: auto;
+        overflow: visible;
+      }
+    </style>
+  </head>
 
-<body>
+  <body>
+    <a
+      class="btn btn-primary position-absolute m-2"
+      data-bs-toggle="offcanvas"
+      href="#offcanvasDark"
+      role="button"
+      aria-controls="offcanvasDark"
+    >
+      <i class="bi bi-list"></i>
+    </a>
 
-  <a class="btn btn-primary position-absolute m-2" data-bs-toggle="offcanvas" href="#offcanvasDark" role="button"
-    aria-controls="offcanvasDark">
-    <i class="bi bi-list"></i>
-  </a>
-
-  <div class="offcanvas offcanvas-start text-bg-dark" tabindex="-1" id="offcanvasDark"
-    aria-labelledby="offcanvasDarkLabel">
-    <div class="offcanvas-header">
-      <h5 class="offcanvas-title" id="offcanvasDarkLabel">Data Visualisation Project</h5>
-      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-    </div>
-    <div class="offcanvas-body">
-      <p>Place offcanvas content here.</p>
-    </div>
-  </div>
-
-  <div class="container-xxl">
-    <h1 class="ms-5">Sarawak Tourism in <span id="currentYear">2011</span></h1>
-
-    <div class="row align-items-start">
-      <div class="col-8">
-        <div class="d-flex align-items-center">
-          <span>2011</span>
-          <input type="range" class="form-range mx-2 flex-grow-1" min="2011" max="2021" value="2011" id="year"
-            oninput="updateYear()">
-          <span>2021</span>
-        </div>
-
-        <p id="chart"></p>
-
-        <div class="d-flex justify-content-end">
-          <select class="form-select form-select-sm mb-3 me-2" aria-label="Large select example" style="width: auto">
-            <option selected>Visitor Arrival</option>
-            <option value="1">Business Events</option>
-          </select>
-
-          <select class="form-select form-select-sm mb-3" aria-label="Large select example" style="width: auto">
-            <option selected>National Park</option>
-            <option value="1">Culture Village</option>
-          </select>
-        </div>
-
-
+    <div
+      class="offcanvas offcanvas-start text-bg-dark"
+      tabindex="-1"
+      id="offcanvasDark"
+      aria-labelledby="offcanvasDarkLabel"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasDarkLabel">
+          Data Visualisation Project
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
       </div>
-      <div class="col-4">
-        total, monthly, pie etc
+      <div class="offcanvas-body">
+        <p>Place offcanvas content here.</p>
       </div>
-
     </div>
-  </div>
 
+    <div class="container-xxl">
+      <h1 class="ms-5">
+        Sarawak Tourism in
+        <span id="currentYear" class="badge bg-secondary">2021</span>
+      </h1>
 
+      <div class="row align-items-start">
+        <div class="col-12 col-md-8">
+          <div class="d-flex align-items-center">
+            <span class="badge bg-secondary">2011</span>
+            <input
+              type="range"
+              class="form-range mx-2 flex-grow-1"
+              min="2011"
+              max="2021"
+              value="2021"
+              id="year"
+              oninput="updateYear()"
+            />
+            <span class="badge bg-secondary">2021</span>
+          </div>
 
+          <p id="chart" class="rounded bg-body-tertiary my-4"></p>
 
-  <footer style="color: grey" class="text-center">
-    COS30045 Data Visualisation Project
-    <br />
-    By Tan Voon Tao, Jia Zheng Chua
-  </footer>
+          <div class="d-flex justify-content-end">
+            <select
+              class="form-select form-select-sm mb-3 me-2"
+              aria-label="Large select example"
+              style="width: auto"
+            >
+              <option selected>Visitor Arrival</option>
+              <option value="1">Business Events</option>
+            </select>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-    crossorigin="anonymous"></script>
+            <select
+              class="form-select form-select-sm mb-3"
+              aria-label="Large select example"
+              style="width: auto"
+              id="place"
+            >
+              <option selected value="1">National Park</option>
+              <option value="2">Culture Village</option>
+              <option value="3">Sarawak Museum</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <p>total, monthly, pie etc</p>
+        </div>
+      </div>
+    </div>
 
-  <script>
-    // Function to update the displayed year based on the range slider value
-    function updateYear() {
-      var yearSlider = document.getElementById("year");
-      var currentYearDisplay = document.getElementById("currentYear");
+    <footer style="color: grey" class="text-center">
+      COS30045 Data Visualisation Project
+      <br />
+      By Tan Voon Tao, Jia Zheng Chua
+    </footer>
 
-      currentYearDisplay.textContent = yearSlider.value;
-    }
-  </script>
-</body>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+      crossorigin="anonymous"
+    ></script>
+    <script>
+      var popoverTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="popover"]')
+      );
+      var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl);
+      });
+    </script>
 
+    <script src="index.js"></script>
+  </body>
 </html>
+
+<!-- https://sarawak.gov.my/web/home/article_view/358/298/ -->
