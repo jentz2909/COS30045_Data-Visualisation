@@ -2,6 +2,21 @@ const width = 800;
 const height = 500;
 
 let currentYear = 2021;
+let currentPlace = "national-parks";
+
+const mapping = {
+  "national-parks": "data/national-parks.csv",
+  "culture-village": "data/culture-village.csv",
+  museums: "data/museums.csv",
+};
+
+const choroplethColor = {
+  "national-parks": d3.interpolateGreens,
+  "culture-village": d3.interpolateReds,
+  museums: d3.interpolateBlues,
+};
+
+const defaultCsv = "data/national-parks.csv";
 
 const svg = d3
   .select("#chart")
@@ -139,178 +154,203 @@ function createPieChartElement(data, desc) {
 
 function handlePlaceChange() {
   const selectedValue = this.value;
-  const mapping = {
-    "1": "data/national-parks.csv",
-    "2": "data/culture-village.csv",
-    "3": "data/museums.csv",
-  };
-  loadDataAndRender(mapping[selectedValue] || mapping["1"]);
+  currentPlace = selectedValue;
+
+  var currentPlaceDisplay = document.getElementById("currentPlace");
+  currentPlaceDisplay.textContent = currentPlace;
+
+  loadDataAndRender(mapping[currentPlace] || mapping["1"]);
 }
 
-function loadDataAndRender(csv = "data/national-parks.csv") {
+function loadDataAndRender(csv = defaultCsv) {
   svg.selectAll("*").remove();
 
-  Promise.all([
-    d3.json("swk.geojson"),
-    d3.csv(csv),
-    d3.csv(`data/national-parks-visitor/${currentYear}.csv`),
-  ]).then(function ([geojsonData, parkData, visitors]) {
-    // Iterate over each feature to correct its winding order
-    geojsonData.features.forEach((feature) => {
-      if (feature.geometry.type === "Polygon") {
-        reverseWindingOrder(feature.geometry);
-      } else if (feature.geometry.type === "MultiPolygon") {
-        feature.geometry.coordinates.forEach((polygon) => {
-          reverseWindingOrder({ coordinates: polygon });
-        });
-      }
-    });
+  visitorCsv = `data/${currentPlace}-visitor/${currentYear}.csv`;
 
-    console.log(parkData)
-
-    const parks = parkData.reduce((acc, park) => {
-      acc[park.name] = park.district.trim();
-      return acc;
-    }, {});
-
-    const districtVisitor = {}; // { district: 1000 }
-    for (const visitor of visitors) {
-      const district = parks[visitor.name.trim()];
-
-      // Convert to number and default to 0 if NaN
-      const domestic = Number(visitor.domestic) || 0;
-      const foreign = Number(visitor.foreign) || 0;
-      const total = domestic + foreign;
-
-      if (districtVisitor[district]) {
-        districtVisitor[district] += total;
-      } else {
-        districtVisitor[district] = total;
-      }
-    }
-
-    // interpolateBlues
-    // interpolateReds
-    // interpolateGreens
-    // interpolateGreys
-    // interpolateOranges
-    // interpolatePurples
-    // interpolateViridis
-    // interpolateInferno
-    // interpolateMagma
-    // interpolatePlasma
-    // interpolateWarm
-    // interpolateCool
-    // interpolateCubehelixDefault
-    // interpolateBuGn
-    // interpolateBuPu
-    // interpolateGnBu
-    // interpolateOrRd
-    // interpolatePuBuGn
-    // interpolatePuBu
-    // interpolatePuRd
-    // interpolateRdPu
-    // interpolateYlGnBu
-    // interpolateYlGn
-    // interpolateYlOrBr
-    // interpolateYlOrRd
-    // interpolateRainbow
-    // interpolateSinebow
-    // interpolateTurbo
-    // interpolateCividis
-    // interpolateWarm
-    // interpolateCool
-    // interpolateCubehelixDefault
-
-    const logScale = d3
-      .scaleLog()
-      .domain([
-        d3.min(Object.values(districtVisitor)),
-        d3.max(Object.values(districtVisitor)),
-      ])
-      .range([0, 1]);
-
-    const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, 1]);
-
-    svg
-      .selectAll("path")
-      .data(geojsonData.features)
-      .enter()
-      .append("path")
-      .attr("d", path)
-      .attr("fill", function (d) {
-        const value = districtVisitor[d.properties.name];
-        return value ? colorScale(logScale(value)) : colorScale(0);
-      })
-      .attr("stroke", "#000")
-      .attr("stroke-width", 1)
-      .attr("data-bs-toggle", "tooltip")
-      .attr("title", (d) => d.properties.name)
-      .on("mouseover", function (event, d) {
-        d3.select(this).attr("fill", "yellow"); // or any other color
-      })
-      .on("mouseout", function (event, d) {
-        const value = districtVisitor[d.properties.name];
-        d3.select(this).attr("fill", value ? colorScale(logScale(value)) : colorScale(0));
+  Promise.all([d3.json("swk.geojson"), d3.csv(csv), d3.csv(visitorCsv)]).then(
+    function ([geojsonData, parkData, visitors]) {
+      // Iterate over each feature to correct its winding order
+      geojsonData.features.forEach((feature) => {
+        if (feature.geometry.type === "Polygon") {
+          reverseWindingOrder(feature.geometry);
+        } else if (feature.geometry.type === "MultiPolygon") {
+          feature.geometry.coordinates.forEach((polygon) => {
+            reverseWindingOrder({ coordinates: polygon });
+          });
+        }
       });
 
-    svg
-      .selectAll("circle")
-      .data(parkData)
-      .enter()
-      .append("circle")
-      .attr("fill", "red")
-      .attr("r", 4)
-      .attr("cx", (d) => projection([+d.lon, +d.lat])[0])
-      .attr("cy", (d) => projection([+d.lon, +d.lat])[1])
-      .attr("data-bs-toggle", "popover")
-      .attr("data-bs-html", "true")
-      // .attr("data-bs-trigger", "hover")
-      .attr("data-bs-trigger", "manual") // Set trigger to manual
-      .style("cursor", "pointer")
-      .on("mouseover", function (event, d) {
-        d3.select(this)
-          .transition()
-          .duration(200) // Adjust as needed for animation speed
-          .attr("r", 8) // Adjust to desired hover size
-          .attr("fill", "blue"); // Change color if desired
+      const parks = parkData.reduce((acc, park) => {
+        acc[park.name] = park.district.trim();
+        return acc;
+      }, {});
 
-        // Find visitor data for the current park
-        const visitorInfo = visitors.find((v) => v.name === d.name);
-
-        let content;
-        if (visitorInfo) {
-          const data = [
-            { type: "domestic", value: +visitorInfo.domestic },
-            { type: "foreign", value: +visitorInfo.foreign },
-          ];
-
-          content = createPieChartElement(data, d.description);
-        } else {
-          content = `<p class="text-justify">${d.description}</p> <p>No data available</p>`;
+      const districtVisitor = {}; // { district: 1000 }
+      for (const visitor of visitors) {
+        const district = parks[visitor.name.trim()];
+        let total;
+        // Convert to number and default to 0 if NaN
+        switch (currentPlace) {
+          case "national-parks":
+          case "culture-village":
+            const domestic = Number(visitor.domestic) || 0;
+            const foreign = Number(visitor.foreign) || 0;
+            total = domestic + foreign;
+            break;
+          case "museums":
+            total = Number(visitor.visitor) || 0;
+            break;
+          default:
+            total = 0;
+            break;
         }
 
-        const popover = new bootstrap.Popover(this, {
-          title: d.name,
-          content: content,
-          html: true,
-          placement: "top",
-          trigger: "manual",
+        if (districtVisitor[district]) {
+          districtVisitor[district] += total;
+        } else {
+          districtVisitor[district] = total;
+        }
+      }
+
+      // interpolateBlues
+      // interpolateReds
+      // interpolateGreens
+      // interpolateGreys
+      // interpolateOranges
+      // interpolatePurples
+      // interpolateViridis
+      // interpolateInferno
+      // interpolateMagma
+      // interpolatePlasma
+      // interpolateWarm
+      // interpolateCool
+      // interpolateCubehelixDefault
+      // interpolateBuGn
+      // interpolateBuPu
+      // interpolateGnBu
+      // interpolateOrRd
+      // interpolatePuBuGn
+      // interpolatePuBu
+      // interpolatePuRd
+      // interpolateRdPu
+      // interpolateYlGnBu
+      // interpolateYlGn
+      // interpolateYlOrBr
+      // interpolateYlOrRd
+      // interpolateRainbow
+      // interpolateSinebow
+      // interpolateTurbo
+      // interpolateCividis
+      // interpolateWarm
+      // interpolateCool
+      // interpolateCubehelixDefault
+
+      const logScale = d3
+        .scaleLog()
+        .domain([1, d3.max(Object.values(districtVisitor))])
+        .range([0, 1]);
+
+      const colorScale = d3
+        .scaleSequential(choroplethColor[currentPlace])
+        .domain([0, 1]);
+
+      svg
+        .selectAll("path")
+        .data(geojsonData.features)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr("fill", function (d) {
+          const value = districtVisitor[d.properties.name];
+
+          return value
+            ? colorScale(logScale(value === 0 ? 1 : value))
+            : colorScale(0);
+        })
+        .attr("stroke", "#000")
+        .attr("stroke-width", 1)
+        .attr("data-bs-toggle", "tooltip")
+        .attr("title", (d) => d.properties.name)
+        .on("mouseover", function (event, d) {
+          d3.select(this).attr("fill", "yellow"); // or any other color
+        })
+        .on("mouseout", function (event, d) {
+          const value = districtVisitor[d.properties.name];
+          d3.select(this).attr(
+            "fill",
+            value ? colorScale(logScale(value)) : colorScale(0)
+          );
         });
 
-        popover.show();
-      })
-      .on("mouseout", function () {
-        d3.select(this)
-          .transition()
-          .duration(200) // Adjust as needed for animation speed
-          .attr("r", 4) // Reset to original size
-          .attr("fill", "red"); // Reset to original color
+      svg
+        .selectAll("circle")
+        .data(parkData)
+        .enter()
+        .append("circle")
+        .attr("fill", "red")
+        .attr("r", 4)
+        .attr("cx", (d) => projection([+d.lon, +d.lat])[0])
+        .attr("cy", (d) => projection([+d.lon, +d.lat])[1])
+        .attr("data-bs-toggle", "popover")
+        .attr("data-bs-html", "true")
+        // .attr("data-bs-trigger", "hover")
+        .attr("data-bs-trigger", "manual") // Set trigger to manual
+        .style("cursor", "pointer")
+        .on("mouseover", function (event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200) // Adjust as needed for animation speed
+            .attr("r", 8) // Adjust to desired hover size
+            .attr("fill", "blue"); // Change color if desired
 
-        const popover = bootstrap.Popover.getInstance(this);
-        if (popover) popover.hide();
-      });
-  });
+          // Find visitor data for the current park
+          const visitorInfo = visitors.find((v) => v.name === d.name);
+
+          let content;
+          if (visitorInfo) {
+            switch (currentPlace) {
+              case "national-parks":
+              case "culture-village":
+                const data = [
+                  { type: "domestic", value: +visitorInfo.domestic },
+                  { type: "foreign", value: +visitorInfo.foreign },
+                ];
+
+                content = createPieChartElement(data, d.description);
+                break;
+              case "museums":
+                content = `<p class="text-justify">${d.description}</p> <p>Visitor: ${visitorInfo.visitor}</p>`;
+                break;
+              default:
+                content = `<p class="text-justify">${d.description}</p>`;
+                break;
+            }
+          } else {
+            content = `<p class="text-justify">${d.description}</p> <p>No data available</p>`;
+          }
+
+          const popover = new bootstrap.Popover(this, {
+            title: d.name,
+            content: content,
+            html: true,
+            placement: "top",
+            trigger: "manual",
+          });
+
+          popover.show();
+        })
+        .on("mouseout", function () {
+          d3.select(this)
+            .transition()
+            .duration(200) // Adjust as needed for animation speed
+            .attr("r", 4) // Reset to original size
+            .attr("fill", "red"); // Reset to original color
+
+          const popover = bootstrap.Popover.getInstance(this);
+          if (popover) popover.hide();
+        });
+    }
+  );
 }
 
 // document.addEventListener("click", function (event) {
