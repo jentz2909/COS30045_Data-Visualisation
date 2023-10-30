@@ -1,14 +1,14 @@
-name,lat,lon
-Sarawak Arts Museum, 1.5553840262918612, 110.34393054232822
-Sri Aman Heritage Museum (Fort Alice), 1.2399244725890188, 111.46186436759409
-Petroleum Museum - Miri, 4.38925149033171, 113.99476289272387
-Niah Archaeology Museum - Miri, 3.8225121054865316, 113.76240299642615
-Limbang Regional Museum (Old Fort), 4.748125903684374, 115.0061566675906
-Baram Regional Museum (Fort Hose), 4.1773591038377536, 114.32474429642625
+name,lat,lon,district
+Sarawak Arts Museum, 1.5553840262918612, 110.34393054232822, Kuching
+Sri Aman Heritage Museum (Fort Alice), 1.2399244725890188, 111.46186436759409, Kuching
+Petroleum Museum - Miri, 4.38925149033171, 113.99476289272387, Kuching
+Niah Archaeology Museum - Miri, 3.8225121054865316, 113.76240299642615, Kuching
+Limbang Regional Museum (Old Fort), 4.748125903684374, 115.0061566675906, Kuching
+Baram Regional Museum (Fort Hose), 4.1773591038377536, 114.32474429642625, Kuching
 
-Natural History Museum,1.6000,110.4100
-Islamic Heritage Museum,1.4900,110.2700
-Sarawak Textile Museum,1.6300,110.4400
-Fort Margherita (Brooke Gallery),1.6500,110.4600
-Chinese History Museum,1.6200,110.4500
-Museum Sarawak (New),1.4800,110.2600
+Natural History Museum,1.6000,110.4100, Kuching
+Islamic Heritage Museum,1.4900,110.2700, Kuching
+Sarawak Textile Museum,1.6300,110.4400, Kuching
+Fort Margherita (Brooke Gallery),1.6500,110.4600, Kuching
+Chinese History Museum,1.6200,110.4500, Kuching
+Museum Sarawak (New),1.4800,110.2600, Kuching

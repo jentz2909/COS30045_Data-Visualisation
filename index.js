@@ -1,4 +1,37 @@
+const width = 800;
+const height = 500;
+
 let currentYear = 2021;
+
+const svg = d3
+  .select("#chart")
+  .append("svg")
+  .attr("width", width)
+  .attr("height", height)
+  .call(d3.zoom().on("zoom", zoomed));
+
+const projection = d3
+  .geoMercator()
+  .center([112.608, 2.922])
+  .translate([width / 2, height / 2])
+  .scale(6800);
+
+const path = d3.geoPath().projection(projection);
+
+const tooltip = new bootstrap.Tooltip(document.body, {
+  selector: '[data-bs-toggle="tooltip"]',
+  boundary: "viewport",
+});
+
+document.getElementById("year").addEventListener("input", updateYear);
+document.getElementById("place").addEventListener("change", handlePlaceChange);
+
+initialize();
+
+function initialize() {
+  // setupEventListeners();
+  loadDataAndRender();
+}
 
 function updateYear() {
   var yearSlider = document.getElementById("year");
@@ -14,26 +47,17 @@ function zoomed(event) {
   svg.selectAll("circle").attr("transform", transform);
 }
 
-// Width and height for the SVG canvas
-const width = 800;
-const height = 500;
+function reverseWindingOrder(polygon) {
+  if (!polygon || !polygon.coordinates) return;
 
-// Create an SVG canvas
-const svg = d3
-  .select("#chart")
-  .append("svg")
-  .attr("width", width)
-  .attr("height", height)
-  .call(d3.zoom().on("zoom", zoomed));
+  // Reverse the main ring
+  polygon.coordinates[0].reverse();
 
-// Define a projection for the map (using Mercator for this example)
-const projection = d3
-  .geoMercator()
-  .center([112.608, 2.922])
-  .translate([width / 2, height / 2])
-  .scale(6800); // Adjusted scale to fit the data
-
-const path = d3.geoPath().projection(projection);
+  // If there are any holes, reverse them too
+  for (let i = 1; i < polygon.coordinates.length; i++) {
+    polygon.coordinates[i].reverse();
+  }
+}
 
 function createPieChartElement(data, desc) {
   let width = 350,
@@ -41,7 +65,6 @@ function createPieChartElement(data, desc) {
     radius = 80;
 
   let svg = d3.create("svg").attr("width", width).attr("height", height);
-  // .attr("class", "bg-primary");
 
   // Adjusting the translation to center the pie chart
   let g = svg
@@ -114,6 +137,16 @@ function createPieChartElement(data, desc) {
   return div;
 }
 
+function handlePlaceChange() {
+  const selectedValue = this.value;
+  const mapping = {
+    "1": "data/national-parks.csv",
+    "2": "data/culture-village.csv",
+    "3": "data/museums.csv",
+  };
+  loadDataAndRender(mapping[selectedValue] || mapping["1"]);
+}
+
 function loadDataAndRender(csv = "data/national-parks.csv") {
   svg.selectAll("*").remove();
 
@@ -121,13 +154,105 @@ function loadDataAndRender(csv = "data/national-parks.csv") {
     d3.json("swk.geojson"),
     d3.csv(csv),
     d3.csv(`data/national-parks-visitor/${currentYear}.csv`),
-  ]).then(function ([geojsonData, parkData, visitorData]) {
+  ]).then(function ([geojsonData, parkData, visitors]) {
+    // Iterate over each feature to correct its winding order
+    geojsonData.features.forEach((feature) => {
+      if (feature.geometry.type === "Polygon") {
+        reverseWindingOrder(feature.geometry);
+      } else if (feature.geometry.type === "MultiPolygon") {
+        feature.geometry.coordinates.forEach((polygon) => {
+          reverseWindingOrder({ coordinates: polygon });
+        });
+      }
+    });
+
+    console.log(parkData)
+
+    const parks = parkData.reduce((acc, park) => {
+      acc[park.name] = park.district.trim();
+      return acc;
+    }, {});
+
+    const districtVisitor = {}; // { district: 1000 }
+    for (const visitor of visitors) {
+      const district = parks[visitor.name.trim()];
+
+      // Convert to number and default to 0 if NaN
+      const domestic = Number(visitor.domestic) || 0;
+      const foreign = Number(visitor.foreign) || 0;
+      const total = domestic + foreign;
+
+      if (districtVisitor[district]) {
+        districtVisitor[district] += total;
+      } else {
+        districtVisitor[district] = total;
+      }
+    }
+
+    // interpolateBlues
+    // interpolateReds
+    // interpolateGreens
+    // interpolateGreys
+    // interpolateOranges
+    // interpolatePurples
+    // interpolateViridis
+    // interpolateInferno
+    // interpolateMagma
+    // interpolatePlasma
+    // interpolateWarm
+    // interpolateCool
+    // interpolateCubehelixDefault
+    // interpolateBuGn
+    // interpolateBuPu
+    // interpolateGnBu
+    // interpolateOrRd
+    // interpolatePuBuGn
+    // interpolatePuBu
+    // interpolatePuRd
+    // interpolateRdPu
+    // interpolateYlGnBu
+    // interpolateYlGn
+    // interpolateYlOrBr
+    // interpolateYlOrRd
+    // interpolateRainbow
+    // interpolateSinebow
+    // interpolateTurbo
+    // interpolateCividis
+    // interpolateWarm
+    // interpolateCool
+    // interpolateCubehelixDefault
+
+    const logScale = d3
+      .scaleLog()
+      .domain([
+        d3.min(Object.values(districtVisitor)),
+        d3.max(Object.values(districtVisitor)),
+      ])
+      .range([0, 1]);
+
+    const colorScale = d3.scaleSequential(d3.interpolateBlues).domain([0, 1]);
+
     svg
       .selectAll("path")
       .data(geojsonData.features)
       .enter()
       .append("path")
-      .attr("d", path);
+      .attr("d", path)
+      .attr("fill", function (d) {
+        const value = districtVisitor[d.properties.name];
+        return value ? colorScale(logScale(value)) : colorScale(0);
+      })
+      .attr("stroke", "#000")
+      .attr("stroke-width", 1)
+      .attr("data-bs-toggle", "tooltip")
+      .attr("title", (d) => d.properties.name)
+      .on("mouseover", function (event, d) {
+        d3.select(this).attr("fill", "yellow"); // or any other color
+      })
+      .on("mouseout", function (event, d) {
+        const value = districtVisitor[d.properties.name];
+        d3.select(this).attr("fill", value ? colorScale(logScale(value)) : colorScale(0));
+      });
 
     svg
       .selectAll("circle")
@@ -150,9 +275,8 @@ function loadDataAndRender(csv = "data/national-parks.csv") {
           .attr("r", 8) // Adjust to desired hover size
           .attr("fill", "blue"); // Change color if desired
 
-        console.log(d.name);
         // Find visitor data for the current park
-        const visitorInfo = visitorData.find((v) => v.name === d.name);
+        const visitorInfo = visitors.find((v) => v.name === d.name);
 
         let content;
         if (visitorInfo) {
@@ -188,7 +312,6 @@ function loadDataAndRender(csv = "data/national-parks.csv") {
       });
   });
 }
-loadDataAndRender();
 
 // document.addEventListener("click", function (event) {
 //   // If the clicked element is not a circle, close all popovers
@@ -199,26 +322,3 @@ loadDataAndRender();
 //     });
 //   }
 // });
-
-document.getElementById("place").addEventListener("change", function () {
-  let selectedValue = this.value;
-  let csvFile;
-
-  switch (selectedValue) {
-    case "1":
-      csvFile = "data/national-parks.csv";
-      break;
-    case "2":
-      csvFile = "data/culture-village.csv";
-      break;
-    case "3":
-      csvFile = "data/museums.csv";
-      break;
-    default:
-      csvFile = "data/national-parks.csv";
-      break;
-  }
-  console.log(csvFile)
-
-  loadDataAndRender(csvFile);
-});

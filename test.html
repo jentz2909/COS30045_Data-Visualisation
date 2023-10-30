@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Choropleth Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+      /* Additional styles can be added here if necessary */
+    </style>
+  </head>
+
+  <body>
+    <svg width="800" height="600"></svg>
+    <script>
+      // Sample data
+      const data = {
+        Kuching: 100,
+        Sibu: 50,
+        Miri: 75,
+        // ... add other divisions as needed
+      };
+
+      const width = 800;
+      const height = 600;
+
+      // Load the GeoJSON file
+      d3.json("swk.geojson").then(drawMap);
+
+      function drawMap(geoData) {
+        const svg = d3.select("svg");
+        const mapGroup = svg.append("g"); // Create a group to contain the region paths
+
+        const projection = d3
+          .geoMercator()
+          .center([112.608, 2.922])
+          .translate([width / 2, height / 2])
+          .scale(6800);
+
+        const path = d3.geoPath().projection(projection);
+
+        const colorScale = d3
+          .scaleSequential(d3.interpolateBlues)
+          .domain([0, 100]); // Adjusted to fixed values for now
+
+        mapGroup // Append paths to the group, not directly to the SVG
+          .selectAll("path")
+          .data(geoData.features)
+          .enter()
+          .append("path")
+          .attr("d", path)
+          .attr("fill", (d) => {
+            // Use the name property to get the corresponding value from the data object
+            const name = d.properties.name;
+            const value = data[name];
+            return value ? colorScale(value) : "#ccc"; // If no data, set a default gray color
+          })
+          .attr("stroke", "#000")
+          .attr("stroke-width", 0.5);
+      }
+    </script>
+  </body>
+</html>

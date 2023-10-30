@@ -25,18 +25,18 @@
     />
 
     <style>
-      /* Basic styles for the SVG canvas and paths */
-      /* svg {
-        border: 1px solid black;
-      } */
-
       .popover {
         max-width: 450px;
         /* width: 100%; */
       }
-      path {
+      /* path {
         stroke: black;
         fill: none;
+      } */
+
+      .tooltip .tooltip-inner {
+        background-color: #333;
+        color: #fff;
       }
 
       .popover svg {
@@ -97,7 +97,6 @@
               max="2021"
               value="2021"
               id="year"
-              oninput="updateYear()"
             />
             <span class="badge bg-secondary">2021</span>
           </div>
@@ -105,14 +104,14 @@
           <p id="chart" class="rounded bg-body-tertiary my-4"></p>
 
           <div class="d-flex justify-content-end">
-            <select
+            <!-- <select
               class="form-select form-select-sm mb-3 me-2"
               aria-label="Large select example"
               style="width: auto"
             >
               <option selected>Visitor Arrival</option>
               <option value="1">Business Events</option>
-            </select>
+            </select> -->
 
             <select
               class="form-select form-select-sm mb-3"
