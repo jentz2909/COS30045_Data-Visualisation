@@ -1,7 +1,7 @@
 const width = 800;
 const height = 500;
 
-let currentYear = 2021;
+let currentYear = 2011;
 let currentPlace = "national-parks";
 
 const mapping = {
@@ -48,12 +48,19 @@ function initialize() {
   loadDataAndRender();
 }
 
+function formatString(str) {
+  return str
+    .split("-") // Split the string on hyphens
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize the first letter of each word
+    .join(" "); // Join the words back together with spaces
+}
+
 function updateYear() {
   var yearSlider = document.getElementById("year");
   var currentYearDisplay = document.getElementById("currentYear");
   currentYear = yearSlider.value;
   currentYearDisplay.textContent = currentYear;
-  loadDataAndRender(); // reload data and update visualization
+  loadDataAndRender(mapping[currentPlace] || mapping["1"]);
 }
 
 function zoomed(event) {
@@ -147,7 +154,7 @@ function createPieChartElement(data, desc) {
   let div = document.createElement("div");
   div.className =
     "d-flex flex-column justify-content-center align-items-center";
-  div.innerHTML += `<p class="text-justify">${desc}</p>`;
+  div.innerHTML += `<p class="text-justify">${desc}</p> <h3>Visitor Arrival</h3>`;
   div.appendChild(svg.node());
   return div;
 }
@@ -157,7 +164,7 @@ function handlePlaceChange() {
   currentPlace = selectedValue;
 
   var currentPlaceDisplay = document.getElementById("currentPlace");
-  currentPlaceDisplay.textContent = currentPlace;
+  currentPlaceDisplay.textContent = formatString(currentPlace);
 
   loadDataAndRender(mapping[currentPlace] || mapping["1"]);
 }
@@ -319,7 +326,7 @@ function loadDataAndRender(csv = defaultCsv) {
                 content = createPieChartElement(data, d.description);
                 break;
               case "museums":
-                content = `<p class="text-justify">${d.description}</p> <p>Visitor: ${visitorInfo.visitor}</p>`;
+                content = `<p class="text-justify">${d.description}</p> <p>Total Visitors: ${visitorInfo.visitor}</p>`;
                 break;
               default:
                 content = `<p class="text-justify">${d.description}</p>`;
