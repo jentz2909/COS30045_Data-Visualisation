@@ -1,9 +1,9 @@
 const width = 800;
 const height = 500;
 
-const selectedAttractions = "national-parks";
 const yearElement = document.getElementById("currentYear");
 const attractionElement = document.getElementById("currentPlace");
+const totalVisitorElement = document.getElementById("total-visitor-arrival");
 
 const mapping = {
   "national-parks": "data/national-parks.csv",
@@ -17,11 +17,16 @@ const visitorDataMapping = {
   museums: "data/museum-visitors.csv",
 };
 
-
 const choroplethColor = {
   "national-parks": d3.interpolateGreens,
   "culture-village": d3.interpolateReds,
   museums: d3.interpolateBlues,
+};
+
+const headerMapping = {
+  "national-parks": ["#", "Name", "Domestic", "Foreign"],
+  "culture-village": ["#", "Name", "Domestic", "Foreign"],
+  museums: ["#", "Name", "Visitor"],
 };
 
 const svg = d3
@@ -156,11 +161,137 @@ function createPieChartElement(data, desc) {
   return div;
 }
 
+function updatePieChart(visitorDataForPieChart) {
+  const width = 200;
+  const height = 200;
+  const radius = Math.min(width, height) / 2;
+  const svgWidth = width + 100;
+  console.log(svgWidth);
+
+  // Check if SVG already exists
+  let pieSvg = d3.select("#pie-chart").select("svg");
+  if (pieSvg.empty()) {
+    pieSvg = d3
+      .select("#pie-chart")
+      .append("svg")
+      .attr("width", svgWidth)
+      .attr("height", height);
+  }
+
+  // Clear the existing pie chart content
+  pieSvg.selectAll("*").remove();
+
+  // Adjusting the translation to center the pie chart
+  let g = pieSvg
+    .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+  // Create the pie layout function
+  let pie = d3.pie().value((d) => d.count);
+  let arc = d3.arc().innerRadius(0).outerRadius(radius);
+  let labelArc = d3
+    .arc()
+    .innerRadius(radius / 2)
+    .outerRadius(radius);
+
+  // Define color scale
+  let color = d3
+    .scaleOrdinal()
+    .domain(visitorDataForPieChart.map((d) => d.label))
+    .range(["#4682B4", "#FFD700"]); // Adjust colors as needed
+
+  // Draw the pie slices
+  g.selectAll("path")
+    .data(pie(visitorDataForPieChart))
+    .enter()
+    .append("path")
+    .attr("d", arc)
+    .style("fill", (d) => color(d.data.label));
+
+  // Draw the labels
+  g.selectAll("text")
+    .data(pie(visitorDataForPieChart))
+    .enter()
+    .append("text")
+    .attr("transform", (d) => "translate(" + labelArc.centroid(d) + ")") // This uses the new labelArc
+    .attr("dy", ".35em")
+    .style("text-anchor", "middle")
+    .text((d) => d.data.count)
+    .style("fill", "white");
+
+  // Position the legend towards the right side but with a margin
+  let legend = pieSvg
+    .selectAll(".legend")
+    .data(color.domain())
+    .enter()
+    .append("g")
+    .attr("class", "legend")
+    .attr(
+      "transform",
+      (d, i) => "translate(" + (width + 10) + "," + (i * 20 + 10) + ")"
+      // (d, i) => "translate(" + (width - 20) + "," + (i * 20 + 30) + ")"
+    );
+
+  // Draw the legend boxes
+  legend
+    .append("rect")
+    .attr("x", 0)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", color);
+
+  // Draw the legend labels
+  legend
+    .append("text")
+    .attr("x", 24)
+    .attr("y", 9)
+    .attr("dy", ".35em")
+    .style("text-anchor", "start")
+    .text((d) => d)
+    .style("fill", "white");
+}
+
+function updateTableHeader() {
+  const headers = headerMapping[selectedAttraction];
+  let thead = d3.select("#table thead");
+  thead.selectAll("th").remove();
+  thead
+    .selectAll("th")
+    .data(headers)
+    .enter()
+    .append("th")
+    .attr("scope", "col")
+    .text((d) => d);
+}
+
+function updateTable(visitors) {
+  let tbody = d3.select("#table tbody");
+  tbody.selectAll("tr").remove();
+  let rows = tbody.selectAll("tr").data(visitors).enter().append("tr");
+  rows
+    .append("th")
+    .attr("scope", "row")
+    .text((d, i) => i + 1);
+
+  switch (selectedAttraction) {
+    case "national-parks":
+    case "culture-village":
+      rows.append("td").text((d) => d.name);
+      rows.append("td").text((d) => d.domestic);
+      rows.append("td").text((d) => d.foreign);
+      break;
+    case "museums":
+      rows.append("td").text((d) => d.name);
+      rows.append("td").text((d) => d.visitor);
+      break;
+  }
+}
+
 function renderMap() {
   svg.selectAll("*").remove();
 
-  locationCsv = mapping[selectedAttractions];
-  visitorCsv = visitorDataMapping[selectedAttractions];
+  locationCsv = mapping[selectedAttraction];
+  visitorCsv = visitorDataMapping[selectedAttraction];
 
   Promise.all([
     d3.json("swk.geojson"),
@@ -183,9 +314,30 @@ function renderMap() {
       return acc;
     }, {});
 
+    // Filter visitors based on the selected year
     visitors = visitors.filter((v) => Number(v.year) === Number(selectedYear));
 
+    let totalDomestic = 0;
+    let totalForeign = 0;
+
+    // Calculate total domestic and foreign visitors
+    visitors.forEach((visitor) => {
+      totalDomestic += Number(visitor.domestic) || 0;
+      totalForeign += Number(visitor.foreign) || 0;
+    });
+
+    // Create data for the pie chart
+    const visitorDataForPieChart = [
+      { label: "Domestic", count: totalDomestic },
+      { label: "Foreign", count: totalForeign },
+    ];
+
+    updatePieChart(visitorDataForPieChart);
+    updateTable(visitors);
+
     const districtVisitor = {}; // { district: 1000 }
+    let totalVisitor = 0;
+
     for (const visitor of visitors) {
       const district = locations[visitor.name.trim()];
       let total;
@@ -210,7 +362,11 @@ function renderMap() {
       } else {
         districtVisitor[district] = total;
       }
+
+      // sum total visitor
+      totalVisitor += total;
     }
+    totalVisitorElement.innerHTML = totalVisitor;
 
     const logScale = d3
       .scaleLog()
@@ -323,8 +479,8 @@ function handlePlaceChange() {
   selectedAttraction = this.value;
 
   attractionElement.textContent = formatString(selectedAttraction);
-
   renderMap();
+  updateTableHeader();
 }
 
 document.getElementById("year").addEventListener("input", updateYear);
@@ -332,7 +488,8 @@ document.getElementById("place").addEventListener("change", handlePlaceChange);
 
 const init = () => {
   yearElement.innerHTML = selectedYear;
-  attractionElement.innerHTML = formatString(selectedAttractions);
+  totalVisitorElement.innerHTML = 0;
+  attractionElement.innerHTML = formatString(selectedAttraction);
   renderMap();
 };
 
