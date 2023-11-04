@@ -58,6 +58,14 @@ function updateYear() {
   renderMap();
 }
 
+function handlePlaceChange() {
+  selectedAttraction = this.value;
+
+  attractionElement.textContent = formatString(selectedAttraction);
+  renderMap();
+  updateTableHeader();
+}
+
 function zoomed(event) {
   const { transform } = event;
   svg.selectAll("path").attr("transform", transform);
@@ -265,6 +273,8 @@ function updateTableHeader() {
 }
 
 function updateTable(visitors) {
+  updateTableHeader();
+
   let tbody = d3.select("#table tbody");
   tbody.selectAll("tr").remove();
   let rows = tbody.selectAll("tr").data(visitors).enter().append("tr");
@@ -442,7 +452,7 @@ function renderMap() {
               content = createPieChartElement(data, d.description);
               break;
             case "museums":
-              content = `<p class="text-justify">${d.description}</p> <p>Total Visitors: ${visitorInfo.visitor}</p>`;
+              content = `<p class="text-justify">${d.description}</p> <p><strong>Total Visitors: </strong> ${visitorInfo.visitor}</p>`;
               break;
             default:
               content = `<p class="text-justify">${d.description}</p>`;
@@ -473,14 +483,6 @@ function renderMap() {
         if (popover) popover.hide();
       });
   });
-}
-
-function handlePlaceChange() {
-  selectedAttraction = this.value;
-
-  attractionElement.textContent = formatString(selectedAttraction);
-  renderMap();
-  updateTableHeader();
 }
 
 document.getElementById("year").addEventListener("input", updateYear);
