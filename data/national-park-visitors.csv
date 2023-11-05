@@ -1,51 +1,51 @@
 name,domestic,foreign,year
 Kubah National Park,6647,2047.0,2011
 Bako National Park,12019,29451.0,2011
-Mulu National Park,7099,15227.0,2011
+Gunung Mulu National Park,7099,15227.0,2011
 Niah National Park,18977,6416.0,2011
-Lambir National Park,11438,3799.0,2011
+Lambir Hills National Park,11438,3799.0,2011
 Similajau National Park,10490,1824.0,2011
-Gading National Park,22964,4247.0,2011
-Matang National Park,29590,5556.0,2011
+Gunung Gading National Park,22964,4247.0,2011
+Matang Wildlife Centre,29590,5556.0,2011
 Batang Ai National Park,135,53.0,2011
-Sama Jaya National Reserves,154311,,2011
+Sama Jaya Nature Reserves,154311,,2011
 Loagan Bunut National Park,638,130.0,2011
 Tanjung Datu National Park,231,133.0,2011
-Wind Cave,13324,2423.0,2011
-Talang Satang,428,47.0,2011
-Maludam National Reserves,0,,2011
-Semenggoh Wildlife Sanctuary,76748,51197.0,2011
-Mulu National Park,2377,13331.0,2012
+Wind Cave Nature Reserves,13324,2423.0,2011
+Talang Satang National Park,428,47.0,2011
+Maludam National Park,0,,2011
+Semenggoh Nature Reserves,76748,51197.0,2011
+Gunung Mulu National Park,2377,13331.0,2012
 Niah National Park,18868,6295.0,2012
 Bako National Park,13476,30993.0,2012
-Matang National Park,19735,3180.0,2012
-Semenggoh Wildlife Sanctuary,60567,41725.0,2012
-Lambir National Park,13019,4854.0,2012
+Matang Wildlife Centre,19735,3180.0,2012
+Semenggoh Nature Reserves,60567,41725.0,2012
+Lambir Hills National Park,13019,4854.0,2012
 Batang Ai National Park,62,91.0,2012
 Similajau National Park,12016,1123.0,2012
-Talang Satang,664,485.0,2012
-Gading National Park,20421,5624.0,2012
-Sama Jaya National Reserves,126901,,2012
+Talang Satang National Park,664,485.0,2012
+Gunung Gading National Park,20421,5624.0,2012
+Sama Jaya Nature Reserves,126901,,2012
 Loagan Bunut National Park,638,22.0,2012
 Tanjung Datu National Park,254,150.0,2012
-Wind Cave,12961,6056.0,2012
-Maludam National Reserves,0,,2012
+Wind Cave Nature Reserves,12961,6056.0,2012
+Maludam National Park,0,,2012
 Kubah National Park,9686,5931.0,2012
 Similajau National Park,9835,1226.0,2013
 Bako National Park,13112,32344.0,2013
-Mulu National Park,6286,12871.0,2013
+Gunung Mulu National Park,6286,12871.0,2013
 Niah National Park,20543,5863.0,2013
-Lambir National Park,11406,3279.0,2013
-Gading National Park,14162,3524.0,2013
+Lambir Hills National Park,11406,3279.0,2013
+Gunung Gading National Park,14162,3524.0,2013
 Kubah National Park,7260,2787.0,2013
-Matang National Park,20695,3236.0,2013
-Maludam National Reserves,0,,2013
-Semenggoh Wildlife Sanctuary,63986,36824.0,2013
-Sama Jaya National Reserves,109339,42.0,2013
+Matang Wildlife Centre,20695,3236.0,2013
+Maludam National Park,0,,2013
+Semenggoh Nature Reserves,63986,36824.0,2013
+Sama Jaya Nature Reserves,109339,42.0,2013
 Loagan Bunut National Park,586,64.0,2013
 Tanjung Datu National Park,235,179.0,2013
-Wind Cave,23508,4103.0,2013
-Talang Satang,398,1503.0,2013
+Wind Cave Nature Reserves,23508,4103.0,2013
+Talang Satang National Park,398,1503.0,2013
 Batang Ai National Park,142,74.0,2013
 Bako National Park,14837,32622,2014
 Gunung Mulu National Park,6549,13635,2014
@@ -56,12 +56,12 @@ Gunung Gading National Park,18101,2868,2014
 Niah National Park,19829,5684,2014
 Matang Wildlife Centre,28834,5059,2014
 Semenggoh Nature Reserves,57508,34889,2014
-Sama Jaya Forest Park,147467,15,2014
+Sama Jaya Nature Reserves,147467,15,2014
 Loagan Bunut National Park,847,32,2014
 Tanjung Datu National Park,191,340,2014
 Wind Cave Nature Reserves,25286,4446,2014
 Talang Satang National Park,398,1108,2014
-Fairy Cave National Reserves,17532,5804,2014
+Fairy Cave Nature Reserves,17532,5804,2014
 Batang Ai National Park,36,34,2014
 Niah National Park,21866,5189,2015
 Lambir Hills National Park,12902,3401,2015
@@ -71,11 +71,11 @@ Gunung Gading National Park,16185,2082,2015
 Batang Ai National Park,50,24,2015
 Matang Wildlife Centre,33162,3690,2015
 Tanjung Datu National Park,536,477,2015
-Sama Jaya Forest Park,169756,3941,2015
+Sama Jaya Nature Reserves,169756,3941,2015
 Loagan Bunut National Park,1048,51,2015
 Wind Cave Nature Reserves,23911,3761,2015
 Talang Satang National Park,266,963,2015
-Fairy Cave National Reserves,20146,5081,2015
+Fairy Cave Nature Reserves,20146,5081,2015
 Santubong National Park,8074,2017,2015
 Maludam National Park,0,6,2015
 Semenggoh Nature Reserves,46304,30335,2015
@@ -154,7 +154,7 @@ Loagan Bunut National Park, 462, 47,2019
 Semenggoh Nature Reserves, 46305, 49691,2019
 Fairy Cave Nature Reserves, -, Under renovation,2019
 Bako National Park, 7511, 4887,2020
-Miri-Sibuti Coral Reefs National Park, 1029, -,2020
+Sibuti Coral Reefs National Park, 1029, -,2020
 Gunung Mulu National Park, 2090, 2033,2020
 Niah National Park, 6776, 834,2020
 Lambir Hills National Park, 2437, 534,2020
@@ -183,7 +183,7 @@ Lambir Hills National Park, 7087, 56,2021
 Maludam National Park, 1, 0,2021
 Gunung Mulu National Park, 2216, 125,2021
 Piasau Nature Reserves, 7253, 0,2021
-Miri-Sibuti Coral Reefs National Park, 127, 52,2021
+Sibuti Coral Reefs National Park, 127, 52,2021
 Kuching Wetland National Park, 0, 0,2021
 Loagan Bunut National Park, 459, 14,2021
 Santubong National Park, 3506, 35,2021
