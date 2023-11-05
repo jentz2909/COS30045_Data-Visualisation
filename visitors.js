@@ -1,7 +1,7 @@
 // Update the charts based on selected year and chart type
 function updateCharts(selectedYear, chartType) {
     // Load your CSV data
-    d3.csv("data/Visitor_Arrival.csv").then(function (data) {
+    d3.csv("data/visitor-arrival.csv").then(function (data) {
         var domesticCount = 0;
         var foreignerCount = 0;
 
@@ -44,34 +44,39 @@ function createPieChart(foreignerCount, domesticCount) {
     d3.select("#chart").style("background-color", null);
 
     // Set chart dimensions
-    const width = 800;
-    const height = 500;
+    var width = 800;
+    var height = 500;
 
     // Define outer and inner radius for the pie chart
-    const outerRadius = Math.min(width, height) / 2 - 10;
-    const innerRadius = 0;
+    var outerRadius = Math.min(width, height) / 2 - 10;
+    var innerRadius = 0;
 
     // Define color scale for pie chart slices
-    const color = d3.scaleOrdinal(["#28a745", "#007bff"]);
+    var color = d3.scaleOrdinal(["#28a745", "#007bff"]);
 
     // Format percentage values
-    const formatPercent = d3.format(".2%");
+    var formatPercent = d3.format(".2%");
 
     // Calculate the total count of visitors
-    const total = foreignerCount + domesticCount;
+    var total = foreignerCount + domesticCount;
 
     // Define data for the pie chart
-    const data = [
+    var data = [
         { label: "Domestic", value: domesticCount },
         { label: "Foreign", value: foreignerCount }
     ];
 
     // Create a pie layout and arc generator
-    const pie = d3.pie().sort(null).value(d => d.value);
-    const arc = d3.arc().outerRadius(outerRadius).innerRadius(innerRadius);
+    var pie = d3.pie()
+        .sort(null)
+        .value(d => d.value);
+
+    var arc = d3.arc()
+        .outerRadius(outerRadius)
+        .innerRadius(innerRadius);
 
     // Create an SVG element for the pie chart
-    const svg = d3.select("#chart")
+    var svg = d3.select("#chart")
         .append("svg")
         .attr("width", width)
         .attr("height", height)
@@ -79,16 +84,28 @@ function createPieChart(foreignerCount, domesticCount) {
         .attr("transform", `translate(${width / 2},${height / 2})`);
 
     // Create pie slices
-    const arcs = svg.selectAll(".arc")
+    var arcs = svg.selectAll(".arc")
         .data(pie(data))
         .enter()
         .append("g")
         .attr("class", "arc");
 
-    // Add pie slices with mouseover functionality
     arcs.append("path")
         .attr("d", arc)
-        .style("fill", (d, i) => color(i));
+        .style("fill", (d, i) => color(i))
+        .on("mouseover", function (d) {
+            // Create a tooltip div
+            d3.select("#chart").append("div")
+                .attr("class", "tooltip")
+                .html(d.data.label + ": " + d.data.value) // Display the label and value
+                .style("left", (d3.event.pageX + 10) + "px")
+                .style("top", (d3.event.pageY - 30) + "px");
+        })
+        .on("mouseout", function () {
+            // Remove the tooltip when mouseout
+            d3.select(".tooltip").remove();
+        });
+
     // Add text labels with percentages
     arcs.append("text")
         .attr("transform", d => `translate(${arc.centroid(d)})`)
@@ -97,7 +114,7 @@ function createPieChart(foreignerCount, domesticCount) {
         .text(d => `${formatPercent(d.data.value / total)}`);
 
     // Create legend
-    const legend = d3.select("#legend")
+    var legend = d3.select("#legend")
         .selectAll(".key")
         .data(data)
         .enter().append("div")
@@ -158,7 +175,35 @@ function createBarChart(data) {
         .attr("y", function (d) { return y(d.Domestic); })
         .attr("width", x.bandwidth() / 2)
         .attr("height", function (d) { return height - y(d.Domestic); })
-        .style("fill", "green"); // Adjust the bar color as needed
+        .style("fill", "#28a745")
+        .on("mouseover", function (event, d) {
+            // Show the total number as a tooltip on mouseover
+            var total = d.Domestic + d.Foreigner;
+            var tooltipText = "Total: " + total;
+
+            // Get mouse coordinates
+            var [x, y] = d3.pointer(event);
+
+            // Create or update the tooltip
+            var tooltip = d3.select("#chart").select(".tooltip");
+            if (tooltip.empty()) {
+                tooltip = d3.select("#chart")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .html(tooltipText);
+            } else {
+                tooltip.html(tooltipText);
+            }
+
+            // Set the tooltip's position relative to the mouse cursor
+            tooltip.style("left", (x + 10) + "px")
+                .style("top", (y - 25) + "px")
+                .style("display", "block");
+        })
+        .on("mouseout", function () {
+            // Hide the tooltip on mouseout
+            d3.select(".tooltip").style("display", "none");
+        });
 
     // Create bars for foreign visitors
     groups.append("rect")
@@ -166,7 +211,37 @@ function createBarChart(data) {
         .attr("y", function (d) { return y(d.Foreigner); })
         .attr("width", x.bandwidth() / 2)
         .attr("height", function (d) { return height - y(d.Foreigner); })
-        .style("fill", "blue"); // Adjust the bar color as needed
+        .style("fill", "#007bff")
+        .on("mouseover", function (event, d) {
+            // Show the total number as a tooltip on mouseover
+            var total = d.Domestic + d.Foreigner;
+            var tooltipText = "Total: " + total;
+
+            // Get mouse coordinates
+            var [x, y] = d3.pointer(event);
+
+            // Create or update the tooltip
+            var tooltip = d3.select("#chart").select(".tooltip");
+            if (tooltip.empty()) {
+                tooltip = d3.select("#chart")
+                    .append("div")
+                    .attr("class", "tooltip")
+                    .html(tooltipText);
+            } else {
+                tooltip.html(tooltipText);
+            }
+
+            // Set the tooltip's position relative to the mouse cursor
+            tooltip.style("left", (x + 10) + "px")
+                .style("top", (y - 25) + "px")
+                .style("display", "block");
+        })
+        .on("mouseout", function () {
+            // Hide the tooltip on mouseout
+            d3.select(".tooltip").style("display", "none");
+        });
+
+
 
     // Add X axis
     svg.append("g")
@@ -186,8 +261,13 @@ function createBarChart(data) {
         .style("fill", "black") // Set the title text color
         .text("Visitor Counts by Month");
 
+    // Define a color scale for the legend
+    var color = d3.scaleOrdinal()
+        .domain(["Domestic", "Foreign"])
+        .range(["#28a745", "#007bff"]); // Adjust the legend colors as needed
+
     // Create legend for the group bar chart
-    const legend = d3.select("#legend")
+    var legend = d3.select("#legend")
         .selectAll(".key")
         .data(["Domestic", "Foreign"])
         .enter()
@@ -198,16 +278,13 @@ function createBarChart(data) {
         .style("height", "10px")
         .style("width", "10px")
         .style("margin", "5px 5px")
-        .style("background-color", (d, i) => color(i));
+        .style("background-color", (d, i) => color(d));
 
     legend.append("div")
         .attr("class", "name")
         .text(d => d);
 
 }
-
-
-// Rest of your code for bar chart, data loading, and event handling
 
 // Initialize the page
 document.addEventListener("DOMContentLoaded", function () {
