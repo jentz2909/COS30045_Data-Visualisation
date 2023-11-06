@@ -22,7 +22,7 @@ function updateCharts(selectedYear, chartType) {
             }
 
         });
-    }else{
+    } else {
         console.log("No found")
     }
 }
@@ -204,6 +204,62 @@ function createPieChart(yearData) {
     keys.exit().remove();
 }
 
+
+// Function to toggle between stacked and percentage stacked bar chart
+function toggleChartType() {
+    const selectedYear = document.getElementById("year").value;
+    const chartTypeRadio = document.querySelector('input[name="chartType"]:checked').value;
+    updateCharts(selectedYear, chartTypeRadio);
+}
+
+
+function createBarChart(data) {
+    // Clear any existing chart
+    d3.select("#chart").html("");
+    d3.select("#legend").html("");
+
+    // Set the background color to white for the chart element
+    d3.select("#chart").style("background-color", 'white');
+
+    var margin = { top: 20, right: 120, bottom: 50, left: 120 };
+    var width = 960 - margin.left - margin.right;
+    var height = 520 - margin.top - margin.bottom;
+
+    var svg = d3.select('#chart')
+        .insert('svg', 'div')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    // Define a color scale for different data categories
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // Create x and y scales
+    var xScale = d3.scaleBand()
+        .domain(data.map(function (d) { return d.Month; }))
+        .range([0, width])
+        .padding(0.1);
+
+    var yScale = d3.scaleLinear()
+        .domain([0, d3.max(data, function (d) { return d.Foreigner + d.Domestic; })])
+        .range([height, 0]);
+
+    // Create x and y axes
+    var xAxis = d3.axisBottom(xScale);
+    var yAxis = d3.axisLeft(yScale);
+
+    // Append the x and y axes to the SVG
+    svg.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(0,' + height + ')')
+        .call(xAxis);
+
+    svg.append('g')
+        .attr('class', 'y axis')
+        .call(yAxis);
+
+}
 
 
 // Declare variables in a scope accessible by all functions
