@@ -1,29 +1,45 @@
 // Update the charts based on selected year and chart type
 function updateCharts(selectedYear, chartType) {
     // Load the data from your CSV file
-    d3.csv("data/visitor-arrival2.csv").then(function (data) {
-        var yearData = data.find(item => item.Year == selectedYear);
-
-        if (chartType === "pie") {
+    if (chartType === "pie") {
+        d3.csv("data/visitor-arrival2.csv").then(function (data) {
+            var yearData = data.find(item => item.Year == selectedYear);
             createPieChart(yearData);
-        } else {
-            console.log("Error")
-        }
-    });
+        });
+    } else if (chartType === "bar") {
+        d3.csv("data/visitor-arrival.csv").then(function (data) {
+            // Get data by year
+            var filteredData = data.filter(function (d) {
+                // Filter the data for the selected year
+                return d.Year === selectedYear;
+            });
+
+            if (chartType === "bar") {
+                // Call your bar chart creation function here
+                createBarChart(filteredData);
+            } else {
+                console.log("Now selected: " + chartType)
+            }
+
+        });
+    }else{
+        console.log("No found")
+    }
 }
 
 // Function to create a pie chart
 function createPieChart(yearData) {
     // Clear any existing chart
     d3.select("#chart").html("");
+    d3.select("#legend").html("");
+
+    // Set the background color to white for the chart element
+    d3.select("#chart").style("background-color", null);
 
     var pieData = [
         { label: "Domestic", value: yearData.Domestic },
         { label: "Foreigner", value: yearData.Foreigner }
     ];
-
-    console.log("Do:" + yearData.Domestic)
-    console.log("Fo:" + yearData.Foreigner)
 
     // Calculate the total
     var total = d3.sum(pieData, d => d.value);
@@ -51,7 +67,7 @@ function createPieChart(yearData) {
     // Define the arc function to create pie segments
     var arc = d3.arc()
         .outerRadius(radius - 10)
-        .innerRadius(0);
+        .innerRadius(radius - 110); // Inner radius for the doughnut effect
 
     // Create a pie layout
     var pie = d3.pie()
@@ -65,69 +81,106 @@ function createPieChart(yearData) {
         .append("g")
         .attr("class", "arc");
 
-    // Create a container for the tooltip
-    var tooltipContainer = d3.select("body")
-        .append("div")
-        .attr("class", "tooltip-container")
-        .style("position", "absolute")
-        .style("pointer-events", "none")
-        .style("z-index", "10")
-        .style("display", "none");
+    // Calculate the position for the hover text
+    var textX = 0;
+    var textY = 0;
 
-    // Create a tooltip box within the container
-    var tooltipBox = tooltipContainer
-        .append("div")
-        .attr("class", "tooltip-box");
+    // Initialize the center text with the total sum value
+    var centerText = svg.append("text")
+        .attr("class", "center-text")
+        .attr("transform", `translate(${textX}, ${textY})`)
+        .style("font-size", "26px")
+        .style("font-weight", "700")
+        .style("fill", "white")
+        .style("text-anchor", "middle")
+        .style("dominant-baseline", "middle")
 
-    svg.on("mousemove", function (event) {
-        // Update the position of the tooltip container as the cursor moves
-        var x = event.pageX;
-        var y = event.pageY;
+    centerText.append("tspan")
+        .attr("x", textX)
+        .attr("dy", "-0.7em")
+        .text("Total Arrival");
 
-        tooltipContainer.style("left", (x + 10) + "px")
-            .style("top", (y - 30) + "px");
-    });
+    centerText.append("tspan")
+        .attr("x", textX)
+        .attr("dy", "1.5em")
+        .text(total);
 
+    // Update the center text with the segment's value on hover
+    arcs.on("mouseover", function (event, d) {
+        centerText.text("");
+    })
+        .on("mouseout", function () {
+            centerText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "-0.7em")
+                .text("Total Arrival");
+
+            centerText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "1.5em")
+                .text(total);
+        });
+
+    // Create pie chart segments
     arcs.append("path")
         .attr("d", arc)
         .attr("fill", d => color(d.data.label))
-        .style("opacity", 1) // Set initial opacity
         .style("stroke", "white")
-        .style("cursor", "pointer") // Set cursor to pointer
+        .style("cursor", "pointer")
         .on("mouseover", function (event, d) {
-            // Display the tooltip container
-            tooltipContainer.style("display", "block");
-
-            // Update the content of the tooltip box
-            tooltipBox.html(`<div>${d.data.label}: ${d.data.value}</div>`)
-                .style("font-size", "14px");
-
-            // Add animation for highlighting on mouseover
+            // segment effect
             d3.select(this)
                 .transition()
                 .duration(200)
-                .attr("transform", "scale(1.1)"); // Enlarge the segment
+                .style("opacity", 0.8);
+
+            // Display the label and value text in the center on separate lines
+            var hoverText = svg.append("text")
+                .attr("class", "hover-text")
+                .attr("transform", `translate(${textX}, ${textY})`)
+                .style("font-size", "26px")
+                .style("font-weight", "700")
+                .style("fill", "white")
+                .style("text-anchor", "middle");
+
+            hoverText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "-0.7em")
+                .text(d.data.label);
+
+            hoverText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "1.5em")
+                .text(d.data.value);
         })
         .on("mouseout", function () {
-            // Hide the tooltip container and restore the segment's size on mouseout
-            tooltipContainer.style("display", "none");
+            // Remove the hover text on mouseout
+            svg.select(".hover-text").remove()
+
+            // segment effect back to default
             d3.select(this)
                 .transition()
                 .duration(200)
-                .attr("transform", "scale(1)");
+                .style("opacity", 1);
         });
+
 
     // Add text labels with percentages
     arcs.append("text")
         .attr("transform", d => `translate(${arc.centroid(d)})`)
         .attr("dy", "0.35em")
         .style("text-anchor", "middle")
+        .style("font-size", "18px")
+        .style('font-weight', '600')
         .text(d => `${formatPercent(d.data.value / total)}`);
 
+    // Create legend
     var legend = d3.select("#chart")
         .append("div")
         .attr("class", "legend")
-        .style("margin-top", "20%")
+        .style("position", "absolute")
+        .style("margin-top", "200px")
+        .style("margin-left", '700px')
         .style("color", "white");
 
     var keys = legend.selectAll(".key")
@@ -153,14 +206,27 @@ function createPieChart(yearData) {
 
 
 
+// Declare variables in a scope accessible by all functions
+var yearSlider;
+var sliderTitle;
+var currentChartType = "bar";
+
+// Function to update the title with the selected year
+function updateSliderTitle() {
+    var selectedYear = yearSlider.value;
+    sliderTitle.textContent = `Sarawak Visitor in ${selectedYear}`;
+    updateCharts(selectedYear, currentChartType); // Update your chart here
+}
+
 // Initialize the page
 document.addEventListener("DOMContentLoaded", function () {
-    var yearSlider = document.getElementById("year");
+    yearSlider = document.getElementById("year"); // Define yearSlider in this scope
     var pieChartButton = document.getElementById("pieChartButton");
     var barChartButton = document.getElementById("barChartButton");
+    sliderTitle = document.getElementById('sliderTitle');
 
-    // Set the default chart type to "pie" when the page loads
-    let currentChartType = "pie";
+    // Add an event listener to the slider input
+    yearSlider.addEventListener('input', updateSliderTitle);
 
     // Initialize the charts with default year and chart type
     updateCharts(yearSlider.value, currentChartType);
