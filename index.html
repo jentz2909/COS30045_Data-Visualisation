@@ -54,41 +54,12 @@
         ></button>
       </div>
       <div class="offcanvas-body">
-        <div class="list-group" data-bs-theme="dark">
-          <a
-            href="index.html"
-            class="list-group-item list-group-item-action text-white"
-            aria-current="true"
-          >
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">Home Page</h5>
-            </div>
-            <p class="mb-1">About the website and assignment. </p>
-          </a>
-          <a href="attractions.html" class="list-group-item list-group-item-action text-white">
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">Attractions</h5>
-            </div>
-            <p class="mb-1">Visitor arrival for national parks, museums, and culture village</p>
-          </a>
-          <a href="visitors.html" class="list-group-item list-group-item-action text-white">
-            <div class="d-flex w-100 justify-content-between">
-              <h5 class="mb-1">Visitors</h5>
-            </div>
-            <p class="mb-1">Visitor arrival from different citizen.</p>
-          </a>
-        </div>
+        <div class="list-group" id="menu" data-bs-theme="dark"></div>
       </div>
     </div>
 
-
-
     <div class="container-xxl">
-      <h1 class="ms-5 text-white">
-        Im home page
-      </h1>
-
-      
+      <h1 class="ms-5 text-white">Im home page</h1>
     </div>
 
     <footer style="color: grey" class="text-center">
@@ -110,7 +81,7 @@
         return new bootstrap.Popover(popoverTriggerEl);
       });
     </script>
-
+    <script src="nav.js"></script>
   </body>
 </html>
 

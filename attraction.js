@@ -495,4 +495,4 @@ const init = () => {
   renderMap();
 };
 
-window.onload = init;
+window.addEventListener('load', init);

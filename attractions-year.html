@@ -62,69 +62,94 @@
 
     <div class="container-xxl">
       <h1 class="ms-5 text-white">
-        Sarawak Tourism in
-        <span id="currentYear" class="badge bg-secondary"></span>
-        (<span id="currentPlace">National Park</span>)
+        Sarawak Tourism Trend: <span class="badge bg-secondary">2011</span> -
+        <span class="badge bg-secondary">2021</span>
       </h1>
 
-      <div class="row align-items-start">
+      <div class="alert alert-warning" role="alert" data-bs-theme="dark">
+        <h4 class="alert-heading">Malaysia MCO Period</h4>
+        <p>March 18, 2020 - December 31, 2021</p>
+        <hr />
+        <p class="mb-0">
+          On 3 January 2022, Sarawak moved to Phase 4, ending movement
+          restrictions in Malaysia
+        </p>
+      </div>
+
+      <div
+        class="btn-group d-flex justify-content-center"
+        role="group"
+        aria-label="Basic radio toggle button group"
+      >
+        <input
+          type="radio"
+          class="btn-check"
+          name="attractions"
+          id="national-parks"
+          autocomplete="off"
+          checked
+        />
+        <label class="btn btn-outline-primary" for="national-parks"
+          >National Parks</label
+        >
+
+        <input
+          type="radio"
+          class="btn-check"
+          name="attractions"
+          id="culture-village"
+          autocomplete="off"
+        />
+        <label class="btn btn-outline-primary" for="culture-village"
+          >Sarawak Culture village</label
+        >
+
+        <input
+          type="radio"
+          class="btn-check"
+          name="attractions"
+          id="museums"
+          autocomplete="off"
+        />
+        <label class="btn btn-outline-primary" for="museums"
+          >Sarawak Museums</label
+        >
+      </div>
+
+      <div class="row align-items-start mt-4">
         <div class="col-12 col-md-8">
-          <div class="d-flex align-items-center">
-            <span class="badge bg-secondary">2011</span>
-            <input
-              type="range"
-              class="form-range mx-2 flex-grow-1"
-              min="2011"
-              max="2021"
-              value="2011"
-              id="year"
-            />
-            <span class="badge bg-secondary">2021</span>
-          </div>
-
-          <p id="chart" class="rounded bg-dark-subtle my-4"></p>
-
-          <div class="d-flex justify-content-end">
-            <select
-              class="form-select form-select-sm mb-3"
-              aria-label="Large select example"
-              style="width: auto"
-              id="place"
-            >
-              <option value="national-parks" selected>National Park</option>
-              <option value="culture-village">Culture Village</option>
-              <option value="museums">Sarawak Museum</option>
-            </select>
-          </div>
-
-          <div class="alert alert-warning" role="alert" data-bs-theme="dark">
-            <h4 class="alert-heading">Malaysia MCO Period</h4>
-            <p>March 18, 2020 - December 31, 2021</p>
-            <hr />
-            <p class="mb-0">
-              On 3 January 2022, Sarawak moved to Phase 4, ending movement
-              restrictions in Malaysia
-            </p>
+          <div class="rounded-4 border border-light p-3 mb-2 text-white">
+            <h3 class="text-center">
+              Tourist Numbers by District, Yearly
+            </h3>
+            <h2 class="text-center" id="total-visitor-arrival">143254</h2>
           </div>
         </div>
         <div class="col-12 col-md-4">
           <div class="rounded-4 border border-light p-3 mb-2 text-white">
-            <h3 class="text-center">Total Visitors Arrival:</h3>
+            <h3 class="text-center">
+              Most Visited Sarawak Attractions, Annually
+            </h3>
             <h2 class="text-center" id="total-visitor-arrival">143254</h2>
           </div>
-          <div class="rounded-4 border border-light p-3 mb-2">
-            <h3 class="text-center text-white">Domestic vs Foreign Visitor</h3>
-            <p id="pie-chart" class="text-center"></p>
-          </div>
+        </div>
+      </div>
 
-          <div class="rounded-4 border border-light p-3 mb-2" id="table-div">
-            <table
-              id="table"
-              class="table table-striped table-hover table-dark"
-            >
-              <thead></thead>
-              <tbody></tbody>
-            </table>
+      <div class="row align-items-start mt-4">
+        <div class="col-12 col-md-4">
+          <div class="rounded-4 border border-light p-3 mb-2 text-white">
+            <h3 class="text-center">
+              International Visitor Origins, Year Over Year
+            </h3>
+            <h2 class="text-center" id="total-visitor-arrival">143254</h2>
+          </div>
+        </div>
+        <div class="col-12 col-md-8">
+          <div class="rounded-4 border border-light p-3 mb-2 text-white">
+            <h3 class="text-center">
+              Tourism vs. Economic Growth Correlation
+            </h3>
+            <h2 class="text-center" id="total-visitor-arrival">143254</h2>
           </div>
         </div>
       </div>
@@ -151,7 +176,6 @@
     </script>
 
     <script src="nav.js"></script>
-    <script src="attraction.js"></script>
   </body>
 </html>
 
