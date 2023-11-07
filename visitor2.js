@@ -10,8 +10,9 @@ function updateCharts(selectedYear, chartType) {
         d3.csv("data/visitor-arrival.csv").then(function (data) {
             // Get data by year
             var filteredData = data.filter(function (d) {
-                // Filter the data for the selected year
-                return d.Year === selectedYear;
+                d.Domestic = parseInt(d.Domestic);
+                d.Foreigner = parseInt(d.Foreigner);
+                return d.Year === selectedYear; // Convert to integer
             });
 
             if (chartType === "bar") {
@@ -204,26 +205,18 @@ function createPieChart(yearData) {
     keys.exit().remove();
 }
 
-
-// Function to toggle between stacked and percentage stacked bar chart
-function toggleChartType() {
-    const selectedYear = document.getElementById("year").value;
-    const chartTypeRadio = document.querySelector('input[name="chartType"]:checked').value;
-    updateCharts(selectedYear, chartTypeRadio);
-}
-
-
+// Function to create a pie chart
 function createBarChart(data) {
     // Clear any existing chart
     d3.select("#chart").html("");
     d3.select("#legend").html("");
 
     // Set the background color to white for the chart element
-    d3.select("#chart").style("background-color", 'white');
+    d3.select("#chart").style("background-color", "white");
 
-    var margin = { top: 20, right: 120, bottom: 50, left: 120 };
-    var width = 960 - margin.left - margin.right;
-    var height = 520 - margin.top - margin.bottom;
+    var margin = { top: 80, right: 50, bottom: 30, left: 100 };
+    var width = 860 - margin.left - margin.right;
+    var height = 600 - margin.top - margin.bottom;
 
     var svg = d3.select('#chart')
         .insert('svg', 'div')
@@ -232,33 +225,125 @@ function createBarChart(data) {
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    // Define a color scale for different data categories
-    var color = d3.scaleOrdinal(d3.schemeCategory10);
-
-    // Create x and y scales
     var xScale = d3.scaleBand()
         .domain(data.map(function (d) { return d.Month; }))
         .range([0, width])
-        .padding(0.1);
+        .padding(0.05);
+
+    // Calculate the percentage values for each category
+    data.forEach(function (d) {
+        d.Total = d.Domestic + d.Foreigner;
+        d.Domestic = (d.Domestic / d.Total);
+        d.Foreigner = (d.Foreigner / d.Total);
+    });
 
     var yScale = d3.scaleLinear()
-        .domain([0, d3.max(data, function (d) { return d.Foreigner + d.Domestic; })])
+        .domain([0, 1]) // Set the y-axis scale to a percentage range (0-100)
         .range([height, 0]);
 
-    // Create x and y axes
-    var xAxis = d3.axisBottom(xScale);
-    var yAxis = d3.axisLeft(yScale);
+    var colorScale = d3.scaleOrdinal()
+        .domain(["Domestic", "Foreigner"])
+        .range(["#28a745", "#007bff"]);
 
-    // Append the x and y axes to the SVG
-    svg.append('g')
-        .attr('class', 'x axis')
-        .attr('transform', 'translate(0,' + height + ')')
-        .call(xAxis);
+    var stack = d3.stack()
+        .keys(["Domestic", "Foreigner"]);
 
-    svg.append('g')
-        .attr('class', 'y axis')
-        .call(yAxis);
 
+    var series = stack(data);
+
+    var groups = svg.selectAll(".series")
+        .data(series)
+        .enter().append("g")
+        .attr("class", "series")
+        .style("fill", function (d) {
+            return colorScale(d.key);
+        });
+
+    var tooltip = d3.select("#chart")
+        .append("div")
+        .attr("id", "tooltip")
+        .style("position", "absolute")
+        .style("background-color", "white")
+        .style("border", "1px solid #ddd")
+        .style("padding", "5px")
+        .style("display", "none");
+
+    // Add mouseover and mousemove event handlers for the bars
+    groups.selectAll("rect")
+        .data(function (d) { return d; })
+        .enter().append("rect")
+        .attr("x", function (d) { return xScale(d.data.Month); })
+        .attr("y", function (d) { return yScale(d[1]); })
+        .attr("height", function (d) { return yScale(d[0]) - yScale(d[1]); })
+        .attr("width", xScale.bandwidth())
+        .on("mouseover", function (event, d) {
+            var category = d3.select(this.parentNode).datum().key; // Get the category (Domestic or Foreigner)
+            var value = d.data[category];
+            var total = d.data.Total;
+            var label = Math.round(d.data[category] * total);
+
+            var tooltipText = category + ": " + label + ", " + (value*100).toFixed(2) + "% (Total: " + total + ")";
+
+            // Display the tooltip and update its position to follow the cursor
+            tooltip
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px")
+                .style("display", "block")
+                .text(tooltipText);
+        })
+        .on("mousemove", function (event) {
+            // Update the tooltip position to follow the cursor
+            tooltip
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px");
+        })
+        .on("mouseout", function () {
+            // Hide the tooltip on mouseout
+            tooltip.style("display", "none");
+        });
+
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale));
+
+    svg.append("g")
+        .call(d3.axisLeft(yScale)
+            .tickFormat(d3.format(".0%"))); // Format y-axis as percentage
+
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -30)
+        .attr("text-anchor", "middle")
+        .style("font-size", "20px")
+        .style("fill", "black")
+        .text("Visitor Percentage by Month");
+
+    // Create legend
+    var legend = d3.select("#chart")
+        .append("div")
+        .attr("class", "legend")
+        .style("margin-top", "40px")
+        .style("color", "black");
+
+    var keys = legend.selectAll(".key")
+        .data(["Domestic", "Foreigner"])
+        .enter().append("div")
+        .attr("class", "key")
+        .style("display", "flex")
+        .style("align-items", "center")
+        .style("margin-right", "20px");
+
+    keys.append("div")
+        .style("height", "10px")
+        .style("width", "10px")
+        .style("margin", "5px 5px")
+        .style("background-color", d => colorScale(d)); // Set the background color based on the key
+
+    keys.append("div")
+        .attr("class", "name")
+        .text(d => d);
+
+    keys.exit().remove();
 }
 
 
