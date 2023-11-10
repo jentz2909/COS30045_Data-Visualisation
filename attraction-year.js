@@ -216,12 +216,11 @@ const renderTop5Attraction = (data) => {
     // Center the legend at the top and move it up by reducing the y translation
     .attr(
       "transform",
-      `translate(${
-        (width +
-          margin.left +
-          margin.right -
-          legendElementWidth * legendElements.length) /
-        2
+      `translate(${(width +
+        margin.left +
+        margin.right -
+        legendElementWidth * legendElements.length) /
+      2
       }, -30)`
     ); // Here, -10 is an arbitrary value, adjust as needed
 
@@ -494,6 +493,150 @@ const renderLineChart = (data) => {
     .text((d) => d);
 };
 
+const renderDualLineChart = (data) => {
+  d3.select("#dual-line-chart").selectAll("*").remove();
+
+  const margin = { top: 30, right: 60, bottom: 70, left: 60 },
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+  const svg = d3.select("#dual-line-chart")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+  data.forEach(d => {
+    d.year = d3.timeParse("%Y")(d.year);
+    d.domestic_visitors = +d.domestic_visitors;
+    d.foreign_visitors = +d.foreign_visitors;
+    d.gdp_growth = +d.gdp_growth;
+  });
+
+  data.sort((a, b) => d3.ascending(a.year, b.year));
+
+  const stackGen = d3.stack()
+    .keys(["domestic_visitors", "foreign_visitors"]);
+  const stackedData = stackGen(data);
+
+  const xScale = d3.scaleBand()
+    .domain(data.map(d => d.year))
+    .range([0, width])
+    .padding(0.1);
+
+  const yScaleVisitors = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.domestic_visitors + d.foreign_visitors)])
+    .range([height, 0]);
+
+  const yScaleGDP = d3.scaleLinear()
+    .domain(d3.extent(data, d => d.gdp_growth))
+    .range([height, 0]);
+
+  svg.append("g")
+    .attr("transform", `translate(0,${height})`)
+    .call(d3.axisBottom(xScale).tickFormat(d3.timeFormat("%Y")));
+
+  svg.append("g")
+    .call(d3.axisLeft(yScaleVisitors).tickFormat(d => `${d / 1000}k`));
+
+  svg.append("g")
+    .attr("transform", `translate(${width},0)`)
+    .call(d3.axisRight(yScaleGDP));
+
+  const barGroups = svg.selectAll(".bar-group")
+    .data(stackedData)
+    .enter().append("g")
+    .attr("class", "bar-group")
+    .style("fill", (d, i) => i === 0 ? "#1f77b4" : "#2ca02c");
+
+  barGroups.selectAll("rect")
+    .data(d => d)
+    .enter().append("rect")
+    .attr("x", d => xScale(d.data.year))
+    .attr("y", height)  // Start from the bottom of the chart
+    .attr("width", xScale.bandwidth())
+    .transition()  // Adding transition
+    .duration(800)  // Duration in milliseconds
+    .attr("y", d => yScaleVisitors(d[1]))
+    .attr("height", d => yScaleVisitors(d[0]) - yScaleVisitors(d[1]));
+
+
+  barGroups.selectAll("text")
+    .data(d => d)
+    .enter().append("text")
+    .text(d => `${((d[1] - d[0]) / 1000).toFixed(1)}k`)
+    .attr("x", d => xScale(d.data.year) + xScale.bandwidth() / 2)
+    .attr("y", d => yScaleVisitors(d[1]) + (yScaleVisitors(d[0]) - yScaleVisitors(d[1])) / 2)
+    .attr("text-anchor", "middle")
+    .attr("dy", "0.35em")
+    .style("fill", "white")
+    .style("font-size", "10px");
+
+  const line = d3.line()
+    .x(d => xScale(d.year) + xScale.bandwidth() / 2)
+    .y(d => yScaleGDP(d.gdp_growth))
+    .curve(d3.curveMonotoneX);
+
+  svg.append("path")
+    .datum(data)
+    .attr("class", "line")
+    .attr("d", line)
+    .style("fill", "none")
+    .style("stroke", "red")
+    .style("stroke-width", "2px");
+
+  svg.selectAll(".line-circle")
+    .data(data)
+    .enter().append("circle")
+    .attr("class", "line-circle")
+    .attr("cx", d => xScale(d.year) + xScale.bandwidth() / 2)
+    .attr("cy", d => yScaleGDP(d.gdp_growth))
+    .attr("r", 4)
+    .style("fill", "red")
+    .style("stroke", "none");
+
+  const tooltip = d3.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+
+  svg.selectAll(".line-circle")
+    .on("mouseover", function (event, d) {
+      tooltip.transition()
+        .duration(200)
+        .style("opacity", .9);
+      tooltip.html("GDP Growth: " + d.gdp_growth + "%")
+        .style("left", (event.pageX) + "px")
+        .style("top", (event.pageY - 28) + "px");
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("r", 6)
+        .style("fill", "orange");
+    })
+    .on("mouseout", function (d) {
+      tooltip.transition()
+        .duration(500)
+        .style("opacity", 0);
+      d3.select(this)
+        .transition()
+        .duration(200)
+        .attr("r", 4)
+        .style("fill", "red");
+    });
+
+  const pathLength = svg.select(".line").node().getTotalLength();
+
+  svg.select(".line")
+    .attr("stroke-dasharray", pathLength + " " + pathLength)
+    .attr("stroke-dashoffset", pathLength)
+    .transition()  // Adding transition
+    .duration(2000)  // Duration in milliseconds
+    .attr("stroke-dashoffset", 0);
+
+};
+
+
 const onRadioChange = (event) => {
   selectedChartType = event.target.value;
   loadCharts();
@@ -506,10 +649,12 @@ const loadCharts = () => {
     d3.csv(data),
     d3.csv("data/top_5_districts_foreign_visitors.csv"),
     d3.csv("data/yearly_visitors_by_district.csv"),
-  ]).then(function ([visitors, districts, yearlyVisitors]) {
+    d3.csv("data/combined_visitor_gdp_data.csv"),
+  ]).then(function ([visitors, districts, yearlyVisitors, gdpVisitors]) {
     renderTop5Attraction(visitors);
     renderTop5Districts(districts);
     renderLineChart(yearlyVisitors);
+    renderDualLineChart(gdpVisitors)
   });
 };
 
@@ -524,3 +669,6 @@ window.addEventListener("load", loadCharts);
 // https://chat.openai.com/c/68cdd535-3e6c-4591-8b9a-c47ea372b8d2
 // yearly visitor by district: https://chat.openai.com/c/6c97e719-3055-418a-9c4a-7807fe92b9e5
 // https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/2935c23f-eb6d-4ddc-bbda-0d59187bed10
+// extract gdp data: https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/0d375af7-4a69-4481-b81c-0319d3ea0220
+// combinen gdp growth with visitor: https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/bb38d1a6-b9b1-4afb-a4f4-3bad4c6f9e25
+// https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/53ca443f-dc5d-4df8-8efe-0a3115028879
