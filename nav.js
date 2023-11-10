@@ -13,9 +13,9 @@ const links = [
   {
     href: "attractions-year.html",
     title:
-      "Attractions <span class='badge bg-secondary'>(Yearly Overview)</span>",
+      "National Park <span class='badge bg-secondary'>(Yearly Overview)</span>",
     description:
-      "(Yearly) Visitor arrival for national parks, museums, and culture village.",
+      "(Yearly) Visitor arrival for national parks",
   },
   {
     href: "visitors.html",

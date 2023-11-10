@@ -25,6 +25,18 @@
     />
 
     <link rel="stylesheet" href="style.css" />
+    <style>
+      .line {
+        fill: none;
+        /* stroke: slategray; */
+        stroke-width: 2;
+      }
+
+      .tooltip {
+        pointer-events: none;
+        z-index: 10;
+      }
+    </style>
   </head>
 
   <body class="bg-dark">
@@ -62,7 +74,8 @@
 
     <div class="container-xxl">
       <h1 class="ms-5 text-white">
-        Sarawak Tourism Trend: <span class="badge bg-secondary">2011</span> -
+        Sarawak National Park Trend:
+        <span class="badge bg-secondary">2011</span> -
         <span class="badge bg-secondary">2021</span>
       </h1>
 
@@ -76,7 +89,7 @@
         </p>
       </div>
 
-      <div
+      <!-- <div
         class="btn-group d-flex justify-content-center"
         role="group"
         aria-label="Basic radio toggle button group"
@@ -114,24 +127,61 @@
         <label class="btn btn-outline-primary" for="museums"
           >Sarawak Museums</label
         >
-      </div>
+      </div> -->
 
       <div class="row align-items-start mt-4">
-        <div class="col-12 col-md-8">
+        <div class="col-12 col-md-6">
           <div class="rounded-4 border border-light p-3 mb-2 text-white">
-            <h3 class="text-center">
-              Tourist Numbers by District, Yearly
-            </h3>
-            <h2 class="text-center" id="total-visitor-arrival">143254</h2>
+            <!-- <h3 class="text-center">Tourist Numbers by District, Yearly</h3> -->
+            <h3 class="text-center">Most Visited National Parks, Annually</h3>
+            <div
+              class="btn-group d-flex justify-content-center mb-4"
+              role="group"
+              aria-label="Basic radio toggle button group"
+            >
+              <input
+                type="radio"
+                class="btn-check"
+                name="bar-chart-type"
+                id="percent-stacked"
+                autocomplete="off"
+                value="percent-stacked"
+              />
+              <label class="btn btn-outline-primary" for="percent-stacked"
+                >Percent Stacked</label
+              >
+
+              <input
+                type="radio"
+                class="btn-check"
+                name="bar-chart-type"
+                id="stacked"
+                autocomplete="off"
+                value="stacked"
+                checked
+              />
+              <label class="btn btn-outline-primary" for="stacked"
+                >Stacked</label
+              >
+            </div>
+            <p id="top-5-chart"></p>
           </div>
         </div>
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-6">
           <div class="rounded-4 border border-light p-3 mb-2 text-white">
             <h3 class="text-center">
-              Most Visited Sarawak Attractions, Annually
+              International Visitor Origins, Year Over Year
             </h3>
-            <h2 class="text-center" id="total-visitor-arrival">143254</h2>
+            <p id="top-5-district"></p>
           </div>
+        </div>
+      </div>
+
+      <div class="rounded-4 border border-light p-3 mb-2 text-white">
+        <h3 class="text-center">Yearly Visitor by District</h3>
+        <div class="d-flex flex-row">
+          <div id="line-chart"></div>
+          <p>Are these....</p>
         </div>
       </div>
 
@@ -146,9 +196,7 @@
         </div>
         <div class="col-12 col-md-8">
           <div class="rounded-4 border border-light p-3 mb-2 text-white">
-            <h3 class="text-center">
-              Tourism vs. Economic Growth Correlation
-            </h3>
+            <h3 class="text-center">Tourism vs. Economic Growth Correlation</h3>
             <h2 class="text-center" id="total-visitor-arrival">143254</h2>
           </div>
         </div>
@@ -176,7 +224,7 @@
     </script>
 
     <script src="nav.js"></script>
+    <script src="attraction-year.js"></script>
   </body>
 </html>
-
 <!-- https://sarawak.gov.my/web/home/article_view/358/298/ -->
