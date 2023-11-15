@@ -2,22 +2,23 @@
 function updateCharts(selectedYear, chartType) {
     // Load the data from your CSV file
     if (chartType === "pie") {
-        d3.csv("data/visitor-arrival2.csv").then(function (data) {
-            var yearData = data.find(item => item.Year == selectedYear);
+        d3.csv("data/visitor-arrival.csv").then(function (data) {
+            var yearData = data.filter(item => item.Year == selectedYear);
             createPieChart(yearData);
         });
     } else if (chartType === "bar") {
         d3.csv("data/visitor-arrival.csv").then(function (data) {
             // Get data by year
             var filteredData = data.filter(function (d) {
-                d.Domestic = parseInt(d.Domestic);
-                d.Foreigner = parseInt(d.Foreigner);
-                return d.Year === selectedYear; // Convert to integer
+                d.Domestic = parseInt(d.Domestic); // Convert to integer
+                d.Foreigner = parseInt(d.Foreigner); // Convert to integer
+                return d.Year === selectedYear; // Return selected year value
             });
 
             if (chartType === "bar") {
                 // Call your bar chart creation function here
                 createBarChart(filteredData);
+                console.log(filteredData)
             } else {
                 console.log("Now selected: " + chartType)
             }
@@ -114,7 +115,6 @@ function Matrix(data) {
     return matrix;
 }
 
-
 // Function to create a pie chart
 function createPieChart(yearData) {
     // Clear any existing chart
@@ -124,9 +124,14 @@ function createPieChart(yearData) {
     // Set the background color to white for the chart element
     d3.select("#chart").style("background-color", null);
 
+    // Convert values to numbers and sum for each category (Domestic and Foreigner)
+    var totalDomestic = d3.sum(yearData, d => +d.Domestic || 0);
+    var totalForeigner = d3.sum(yearData, d => +d.Foreigner || 0);
+
+    // Create a new data structure with the summed values
     var pieData = [
-        { label: "Domestic", value: yearData.Domestic },
-        { label: "Foreigner", value: yearData.Foreigner }
+        { label: "Domestic", value: totalDomestic },
+        { label: "Foreigner", value: totalForeigner }
     ];
 
     // Calculate the total
