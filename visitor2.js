@@ -29,13 +29,10 @@ function updateCharts(selectedYear, chartType) {
             // Filter data for the selected year
             var yearData = data.filter(item => item.Year == selectedYear);
 
-            // Group the data by regions and sum the values
-            var groupedData = groupDataByRegion(yearData);
-
             // Create a chord chart using the grouped data
-            createChordChart(groupedData);
+            createChordChart(groupDataByRegion(yearData));
 
-            console.log(groupedData)
+            console.log(groupDataByRegion(yearData))
         });
     }
     else {
@@ -43,44 +40,74 @@ function updateCharts(selectedYear, chartType) {
     }
 }
 
+// // Function to group data by regions and sum the values as percentages
+// function groupDataByRegion(data) {
+//     var regionMapping = {
+//         "Domestic": ["Peninsular Malaysia", "Sabah"],
+//         "Foreign": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea", "Sri Lanka", "Bangladesh", "Pakistan", "India",
+//             "Singapore", "Brunei", "Philippines", "Thailand", "Indonesia", "United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin",
+//             "Belg/Lux/Net", "Russia", "Others Europe", "Canada", "USA", "Latin America", "Australia", "New Zealand", "Others", "Arabs"],
+//     };
+
+
+//     // Calculate the total value of all regions
+//     var total = 0;
+
+//     // Iterate through the data and sum the values for each region
+//     data.forEach(d => {
+//         Object.keys(regionMapping).forEach(region => {
+//             var columns = regionMapping[region];
+//             var regionTotal = columns.reduce((sum, columnName) => sum + (+d[columnName] || 0), 0);
+//             groupedData[region] = (groupedData[region] || 0) + regionTotal;
+//         });
+//     });
+
+//     // Calculate the total value for Sarawak as 10% of the total data
+//     var sarawakPercentage = 0.1;
+//     groupedData["Sarawak"] = sarawakPercentage * d3.sum(Object.values(groupedData));
+
+//     // Calculate the total percentage (sum of all percentages)
+//     total = d3.sum(Object.values(groupedData));
+
+//     // Calculate percentages for all regions
+//     Object.keys(groupedData).forEach(region => {
+//         groupedData[region] = (groupedData[region] / total) * 10;
+//     });
+
+//     return groupedData;
+// }
+
 // Function to group data by regions and sum the values
 function groupDataByRegion(data) {
+    var regionMapping = {
+        "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
+        "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
+        "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
+        "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
+        "Americas": ["Canada", "USA","Latin America","Latin America"],
+        "Oceania": ["Australia", "New Zealand"],
+        "Malaysia": ["Peninsular Malaysia", "Sabah"],
+        "Others": ["Others","Arabs"],
+    };
 
     var groupedData = {
-        "Eastern Asia": 0,
-        "Southern Asia": 0,
-        "Southeastern Asia": 0,
-        Arabs: 0,
-        Europe: 0,
-        Americas: 0,
-        Oceania: 0,
-        "Latin America": 0,
-        Malaysia: 0,
-        Others: 0,
         Sarawak: 0, // Initialize Sarawak with 0 value
     };
-    
-    // Calculate the total value of all regions
-    var total = 0
 
-    // Calculate the remaining values for other regions
+    // Calculate the total value of all regions
+    var total = 0;
+
+    // Iterate through the data and sum the values for each region
     data.forEach(d => {
-        groupedData["Eastern Asia"] += +d.China + +d.Japan + +d.Taiwan + +d["Hong Kong"] + +d["South Korea"];
-        groupedData["Southern Asia"] += +d["Sri Lanka"] + +d.Bangladesh + +d.Pakistan + +d.India;
-        groupedData["Southeastern Asia"] += +d.Singapore + +d.Brunei + +d.Philippines + +d.Thailand + +d.Indonesia;
-        groupedData.Arabs += +d.Arabs;
-        groupedData.Europe += +d["United Kingdom"] + +d.Germany + +d.France + +d["Nor/Swe/Den/Fin"] + +d["Belg/Lux/Net"] + +d.Russia + +d["Others Europe"];
-        groupedData.Americas += +d.Canada + +d.USA;
-        groupedData.Oceania += +d.Australia + +d["New Zealand"];
-        groupedData["Latin America"] += +d["Latin America"];
-        groupedData.Malaysia += +d["Peninsular Malaysia"] + +d.Sabah;
-        groupedData.Others += +d.Others;
+        Object.keys(regionMapping).forEach(region => {
+            var columns = regionMapping[region];
+            var regionTotal = columns.reduce((sum, columnName) => sum + (+d[columnName] || 0), 0);
+            groupedData[region] = (groupedData[region] || 0) + regionTotal;
+        });
     });
 
-    // Calculate the total value of all regions except Sarawak
-    var total = d3.sum(Object.values(groupedData));
-
     // Calculate the fixed value for Sarawak (10% of the total)
+    total = d3.sum(Object.values(groupedData));
     var sarawakValue = 0.1 * total;
 
     // Add the fixed value to Sarawak
@@ -438,6 +465,7 @@ function createBarChart(data) {
     keys.exit().remove();
 }
 
+// Function to create the chord diagram
 function createChordChart(data) {
     // Clear any existing chart
     d3.select("#chart").html("");
