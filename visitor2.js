@@ -94,7 +94,9 @@ function groupDataByRegion(data) {
     var sarawakValue = 0.1 * total;
 
     // Add the fixed value to Sarawak
-    groupedData.Sarawak = sarawakValue;
+    groupedData.Sarawak = Math.round(sarawakValue);
+
+    console.log("hahaha",groupedData)
 
     return groupedData;
 }
@@ -102,6 +104,8 @@ function groupDataByRegion(data) {
 function Matrix(data) {
     var regions = Object.keys(data);
     var numRegions = regions.length;
+
+    console.log("regiondkwhatdata", data)
 
     // Calculate the total value of all regions
     var total = regions.reduce((sum, region) => sum + data[region], 0);
@@ -122,6 +126,7 @@ function Matrix(data) {
 
     return matrix;
 }
+
 // Function to create a pie chart
 function createPieChart(yearData) {
 
@@ -430,7 +435,7 @@ function createBarChart(data) {
         .attr("text-anchor", "middle")
         .style("font-size", "20px")
         .style("fill", "white")
-        .text("Visitor Percentage by Month");
+        .text("Visitor Arrival Over the Months");
 
     // Create legend
     var legend = d3.select("#chart")
@@ -781,7 +786,7 @@ function createChordChart(data) {
     // Get the regions and create the chord matrix
     var regions = Object.keys(data);
 
-    console.log(regions)
+    console.log("dontknow",regions)
 
     // Define the width and height of the chord diagram
     var width = 800;
@@ -789,6 +794,8 @@ function createChordChart(data) {
 
     // Calculate the total value of all regions except Sarawak
     var total = d3.sum(Object.values(data));
+
+    console.log("dontknow what",total)
 
     // Calculate the fixed value for Sarawak (10% of the total excluding Sarawak)
     var sarawakValue = 0.1 * total;
