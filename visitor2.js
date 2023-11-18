@@ -1,36 +1,54 @@
 // Update the charts based on selected year and chart type
 function updateCharts(selectedYear, chartType) {
-    // Load the data from your CSV file
+    // Load the data from CSV file
     if (chartType === "pie") {
-        d3.csv("data/visitor-arrival.csv").then(function (data) {
+        d3.csv("data/visitor_arrival.csv").then(function (data) {
             var yearData = data.filter(item => item.Year == selectedYear);
             createPieChart(yearData);
+            showYearSlider()
         });
-    } else if (chartType === "bar") {
-        d3.csv("data/visitor-arrival.csv").then(function (data) {
+    }
+    else if (chartType === "bar") {
+        d3.csv("data/visitor_arrival.csv").then(function (data) {
             // Get data by year
             var filteredData = data.filter(function (d) {
                 d.Domestic = parseInt(d.Domestic); // Convert to integer
-                d.Foreigner = parseInt(d.Foreigner); // Convert to integer
+                d.Foreign = parseInt(d.Foreign); // Convert to integer
                 return d.Year === selectedYear; // Return selected year value
             });
 
-            if (chartType === "bar") {
-                // Call your bar chart creation function here
-                createBarChart(filteredData);
-                console.log(filteredData)
-            } else {
-                console.log("Now selected: " + chartType)
-            }
-
+            createBarChart(filteredData);
+            showYearSlider()
         });
-    } else if (chartType === "chord") {
+    }
+    else if (chartType === "line") {
+        d3.csv("data/visitor_arrival.csv").then(function (data) {
+
+            // Extract unique years from the dataset
+            var years = Array.from(new Set(data.map(item => item.Year)));
+
+            // Extract data for all years
+            var yearData = {};
+            years.forEach(year => {
+                yearData[year] = data.filter(item => item.Year == year);
+            });
+
+            createLineChart(yearData)
+
+            console.log(yearData)
+
+
+            hideYearSlider(); // Show the year slider
+        });
+    }
+    else if (chartType === "chord") {
         d3.csv("data/visitor_region.csv").then(function (data) {
             // Filter data for the selected year
             var yearData = data.filter(item => item.Year == selectedYear);
 
             // Create a chord chart using the grouped data
             createChordChart(groupDataByRegion(yearData));
+            showYearSlider()
 
             console.log(groupDataByRegion(yearData))
         });
@@ -40,42 +58,7 @@ function updateCharts(selectedYear, chartType) {
     }
 }
 
-// // Function to group data by regions and sum the values as percentages
-// function groupDataByRegion(data) {
-//     var regionMapping = {
-//         "Domestic": ["Peninsular Malaysia", "Sabah"],
-//         "Foreign": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea", "Sri Lanka", "Bangladesh", "Pakistan", "India",
-//             "Singapore", "Brunei", "Philippines", "Thailand", "Indonesia", "United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin",
-//             "Belg/Lux/Net", "Russia", "Others Europe", "Canada", "USA", "Latin America", "Australia", "New Zealand", "Others", "Arabs"],
-//     };
 
-
-//     // Calculate the total value of all regions
-//     var total = 0;
-
-//     // Iterate through the data and sum the values for each region
-//     data.forEach(d => {
-//         Object.keys(regionMapping).forEach(region => {
-//             var columns = regionMapping[region];
-//             var regionTotal = columns.reduce((sum, columnName) => sum + (+d[columnName] || 0), 0);
-//             groupedData[region] = (groupedData[region] || 0) + regionTotal;
-//         });
-//     });
-
-//     // Calculate the total value for Sarawak as 10% of the total data
-//     var sarawakPercentage = 0.1;
-//     groupedData["Sarawak"] = sarawakPercentage * d3.sum(Object.values(groupedData));
-
-//     // Calculate the total percentage (sum of all percentages)
-//     total = d3.sum(Object.values(groupedData));
-
-//     // Calculate percentages for all regions
-//     Object.keys(groupedData).forEach(region => {
-//         groupedData[region] = (groupedData[region] / total) * 10;
-//     });
-
-//     return groupedData;
-// }
 
 // Function to group data by regions and sum the values
 function groupDataByRegion(data) {
@@ -84,10 +67,10 @@ function groupDataByRegion(data) {
         "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
         "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
         "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
-        "Americas": ["Canada", "USA","Latin America","Latin America"],
+        "Americas": ["Canada", "USA", "Latin America", "Latin America"],
         "Oceania": ["Australia", "New Zealand"],
         "Malaysia": ["Peninsular Malaysia", "Sabah"],
-        "Others": ["Others","Arabs"],
+        "Others": ["Others", "Arabs"],
     };
 
     var groupedData = {
@@ -127,8 +110,6 @@ function Matrix(data) {
     var matrix = Array.from({ length: numRegions }, () => Array(numRegions).fill(0));
 
     regions.forEach((region, i) => {
-        matrix[i][i] = data[region]; // Set the value for the current region
-
         regions.forEach((otherRegion, j) => {
             if (i !== j) {
                 // Calculate the value for the connection between regions
@@ -141,24 +122,21 @@ function Matrix(data) {
 
     return matrix;
 }
-
 // Function to create a pie chart
 function createPieChart(yearData) {
-    // Clear any existing chart
+
+    // Clear any existing legend
     d3.select("#chart").html("");
     d3.select("#legend").html("");
 
-    // Set the background color to white for the chart element
-    d3.select("#chart").style("background-color", null);
-
-    // Convert values to numbers and sum for each category (Domestic and Foreigner)
+    // Convert values to numbers and sum for each category (Domestic and Foreign)
     var totalDomestic = d3.sum(yearData, d => +d.Domestic || 0);
-    var totalForeigner = d3.sum(yearData, d => +d.Foreigner || 0);
+    var totalForeign = d3.sum(yearData, d => +d.Foreign || 0);
 
     // Create a new data structure with the summed values
     var pieData = [
         { label: "Domestic", value: totalDomestic },
-        { label: "Foreigner", value: totalForeigner }
+        { label: "Foreign", value: totalForeign }
     ];
 
     // Calculate the total
@@ -292,6 +270,8 @@ function createPieChart(yearData) {
         .style("text-anchor", "middle")
         .style("font-size", "18px")
         .style('font-weight', '600')
+        .style("fill", "white")
+        .style("pointer-events", "none")
         .text(d => `${formatPercent(d.data.value / total)}`);
 
     // Create legend
@@ -326,16 +306,13 @@ function createPieChart(yearData) {
 
 // Function to create a pie chart
 function createBarChart(data) {
-    // Clear any existing chart
+    // Clear any existing legend
     d3.select("#chart").html("");
     d3.select("#legend").html("");
 
-    // Set the background color to white for the chart element
-    d3.select("#chart").style("background-color", "white");
-
     var margin = { top: 80, right: 50, bottom: 30, left: 100 };
-    var width = 860 - margin.left - margin.right;
-    var height = 600 - margin.top - margin.bottom;
+    var width = 800 - margin.left - margin.right;
+    var height = 500 - margin.top - margin.bottom;
 
     var svg = d3.select('#chart')
         .insert('svg', 'div')
@@ -351,9 +328,9 @@ function createBarChart(data) {
 
     // Calculate the percentage values for each category
     data.forEach(function (d) {
-        d.Total = d.Domestic + d.Foreigner;
+        d.Total = d.Domestic + d.Foreign;
         d.Domestic = (d.Domestic / d.Total);
-        d.Foreigner = (d.Foreigner / d.Total);
+        d.Foreign = (d.Foreign / d.Total);
     });
 
     var yScale = d3.scaleLinear()
@@ -361,11 +338,11 @@ function createBarChart(data) {
         .range([height, 0]);
 
     var colorScale = d3.scaleOrdinal()
-        .domain(["Domestic", "Foreigner"])
+        .domain(["Domestic", "Foreign"])
         .range(["#28a745", "#007bff"]);
 
     var stack = d3.stack()
-        .keys(["Domestic", "Foreigner"]);
+        .keys(["Domestic", "Foreign"]);
 
 
     var series = stack(data);
@@ -396,7 +373,7 @@ function createBarChart(data) {
         .attr("height", function (d) { return yScale(d[0]) - yScale(d[1]); })
         .attr("width", xScale.bandwidth())
         .on("mouseover", function (event, d) {
-            var category = d3.select(this.parentNode).datum().key; // Get the category (Domestic or Foreigner)
+            var category = d3.select(this.parentNode).datum().key; // Get the category (Domestic or Foreign)
             var value = d.data[category];
             var total = d.data.Total;
             var label = Math.round(d.data[category] * total);
@@ -421,31 +398,49 @@ function createBarChart(data) {
             tooltip.style("display", "none");
         });
 
+    // Change the color of the entire axis (ticks, tick text, and axis line) to white
     svg.append("g")
         .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(xScale));
+        .call(d3.axisBottom(xScale))
+        .selectAll("text")
+        .style("fill", "white") // X-axis text color
+        .selectAll(".tick line")
+        .style("stroke", "white"); // X-axis tick lines color
 
     svg.append("g")
         .call(d3.axisLeft(yScale)
-            .tickFormat(d3.format(".0%"))); // Format y-axis as percentage
+            .tickFormat(d3.format(".0%"))) // Format y-axis as percentage
+        .selectAll("text")
+        .style("fill", "white") // Y-axis text color
+        .selectAll(".tick line")
+        .style("stroke", "white"); // Y-axis tick lines color
+
+    // Change the color of the axis lines to white
+    svg.selectAll(".domain")
+        .style("stroke", "white"); // Axis line color
+
+    // Change the color of the tick lines that point at the axis values to white
+    svg.selectAll(".tick line")
+        .style("stroke", "white"); // Tick lines color
+
 
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", -30)
         .attr("text-anchor", "middle")
         .style("font-size", "20px")
-        .style("fill", "black")
+        .style("fill", "white")
         .text("Visitor Percentage by Month");
 
     // Create legend
     var legend = d3.select("#chart")
         .append("div")
         .attr("class", "legend")
-        .style("margin-top", "40px")
-        .style("color", "black");
+        .style("margin-top", "100px")
+        .style("color", "white");
 
     var keys = legend.selectAll(".key")
-        .data(["Domestic", "Foreigner"])
+        .data(["Domestic", "Foreign"])
         .enter().append("div")
         .attr("class", "key")
         .style("display", "flex")
@@ -463,7 +458,319 @@ function createBarChart(data) {
         .text(d => d);
 
     keys.exit().remove();
+
 }
+
+// Function to create a line chart
+function createLineChart(yearData) {
+    // Clear any existing chart
+    d3.select("#chart").html("");
+    d3.select("#legend").html("");
+
+    // Set the dimensions of the chart
+    var margin = { top: 100, right: 100, bottom: 30, left: 100 };
+    var width = 800 - margin.left - margin.right;
+    var height = 500 - margin.top - margin.bottom;
+
+    // Create an SVG element
+    var svg = d3.select("#chart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Create a color scale for lines and dots
+    var colorScale = d3.scaleOrdinal()
+        .domain(["Domestic", "Foreign"])
+        .range(["#28a745", "#007bff"]);
+
+    // Extract unique years from the dataset
+    var years = Object.keys(yearData);
+
+    // Create an array to store the data for each year
+    var yearDataArray = years.map(function (year) {
+        return {
+            year: year,
+            data: yearData[year]
+        };
+    });
+
+    // Define scales for x and y axes
+    var x = d3.scaleBand()
+        .domain(years)
+        .range([0, width])
+        .padding(0.1);
+
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(yearDataArray, function (d) {
+            return d3.max(d.data, function (entry) {
+                return Math.max(parseInt(entry.Foreign), parseInt(entry.Domestic));
+            });
+        })])
+        .nice()
+        .range([height, 0]);
+
+    // Calculate the total of "Foreign" and "Domestic" for each year
+    var yearTotals = years.map(function (year) {
+        var ForeignTotal = d3.sum(yearData[year], function (d) {
+            return parseInt(d.Foreign);
+        });
+
+        var domesticTotal = d3.sum(yearData[year], function (d) {
+            return parseInt(d.Domestic);
+        });
+
+        return {
+            year: year,
+            ForeignTotal: ForeignTotal,
+            domesticTotal: domesticTotal
+        };
+    });
+
+    // Create an array of years for the x-axis
+    var yearsArray = yearTotals.map(function (total) {
+        return total.year;
+    });
+
+    // Create scales for x and y axes
+    var x = d3.scaleBand()
+        .domain(yearsArray)
+        .range([0, width])
+        .padding(0.1);
+
+    var y = d3.scaleLinear()
+        .domain([0, d3.max(yearTotals, function (total) {
+            return Math.max(total.ForeignTotal, total.domesticTotal);
+        })])
+        .nice()
+        .range([height, 0]);
+
+    // Define line generators for Foreign and domestic data
+    var lineForeign = d3.line()
+        .x(function (d) { return x(d.year) + x.bandwidth() / 2; })
+        .y(function (d) { return y(d.ForeignTotal); });
+
+    var lineDomestic = d3.line()
+        .x(function (d) { return x(d.year) + x.bandwidth() / 2; })
+        .y(function (d) { return y(d.domesticTotal); });
+
+    // Define a tooltip element
+    var tooltip = d3.select("#chart")
+        .append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0)
+        .style("position", "absolute")
+        .style("color", "white")
+        .style("user-select", "none");
+
+    // Add lines for Foreign data
+    svg.selectAll(".line-Foreign")
+        .data([yearTotals])
+        .enter()
+        .append("path")
+        .attr("class", "line-Foreign")
+        .attr("d", function (d) {
+            return lineForeign(d);
+        })
+        .style("fill", "none")
+        .style("stroke-width", 2)
+        .style("stroke", colorScale("Foreign")) // Set line color
+        .on("mouseover", function () {
+            // Show tooltip-like text on hover for "Foreign" line
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html("<strong>Line: Foreign</strong>")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mousemove", function (event) {
+            // Move tooltip-like text with the cursor
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mouseout", function () {
+            // Hide tooltip-like text on mouseout for "Foreign" line
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+
+    // Add lines for domestic data
+    svg.selectAll(".line-domestic")
+        .data([yearTotals])
+        .enter()
+        .append("path")
+        .attr("class", "line-domestic")
+        .attr("d", function (d) {
+            return lineDomestic(d);
+        })
+        .style("fill", "none")
+        .style("stroke-width", 2)
+        .style("stroke", colorScale("Domestic")) // Set line color
+        .on("mouseover", function () {
+            // Show tooltip-like text on hover for "Domestic" line
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html("<strong>Line: Domestic</strong>")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mousemove", function (event) {
+            // Move tooltip-like text with the cursor
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mouseout", function () {
+            // Hide tooltip-like text on mouseout for "Domestic" line
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
+
+
+    // Add dots for each year's foreign data
+    svg.selectAll(".dot-foreign")
+        .data(yearTotals)
+        .enter()
+        .append("circle")
+        .attr("class", "dot-foreign")
+        .attr("cx", function (d) { return x(d.year) + x.bandwidth() / 2; })
+        .attr("cy", function (d) { return y(d.ForeignTotal); })
+        .attr("r", 5) // Set dot radius
+        .style("fill", colorScale("Foreign")) // Set dot color
+        .on("mouseover", function (event, d) {
+            // Show tooltip on hover for the "Foreign" dot
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html("<strong>Year: " + d.year + "<br>Foreign: " + d.ForeignTotal + "</strong>")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mousemove", function (event) {
+            // Move tooltip with the cursor
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mouseout", function () {
+            // Hide tooltip on mouseout for the "Foreign" dot
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0)
+                .style("pointer-events", "none"); // Disable interaction with the tooltip
+        });
+
+    // Add dots for each year's "Domestic" data
+    svg.selectAll(".dot-domestic")
+        .data(yearTotals)
+        .enter()
+        .append("circle")
+        .attr("class", "dot-domestic")
+        .attr("cx", function (d) { return x(d.year) + x.bandwidth() / 2; })
+        .attr("cy", function (d) { return y(d.domesticTotal); })
+        .attr("r", 5) // Set dot radius
+        .style("fill", colorScale("Domestic")) // Set dot color
+        .on("mouseover", function (event, d) {
+            // Show tooltip on hover for the "Domestic" dot
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 0.9);
+            tooltip.html("<strong>Year: " + d.year + "<br>Domestic: " + d.domesticTotal + "</strong>")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mousemove", function (event) {
+            // Move tooltip with the cursor
+            tooltip.style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 30) + "px");
+        })
+        .on("mouseout", function () {
+            // Hide tooltip on mouseout for the "Domestic" dot
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0)
+                .style("pointer-events", "none"); // Disable interaction with the tooltip
+        });
+
+    // Add x-axis
+    svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x))
+        .selectAll("text") // Select all text elements on the x-axis
+        .style("fill", "white"); // Set the fill (text color) to white
+
+    svg.selectAll(".x-axis path") // Select the x-axis lines
+        .style("stroke", "white"); // Set the stroke (line color) to white
+
+    svg.selectAll(".x-axis line") // Select the x-axis tick lines
+        .style("stroke", "white"); // Set the stroke (line color) to white
+
+    // Add y-axis
+    svg.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(y))
+        .selectAll("text") // Select all text elements on the y-axis
+        .style("fill", "white"); // Set the fill (text color) to white
+
+    svg.selectAll(".y-axis path") // Select the y-axis lines
+        .style("stroke", "white"); // Set the stroke (line color) to white
+
+    svg.selectAll(".y-axis line") // Select the y-axis tick lines
+        .style("stroke", "white"); // Set the stroke (line color) to white
+
+
+    // Add chart title
+    svg.append("text")
+        .attr("class", "chart-title")
+        .attr("x", width / 2)
+        .attr("y", 0 - (margin.top / 2))
+        .attr("text-anchor", "middle")
+        .style("fill", "white")
+        .text("Visitor Arrival Over the Years");
+
+
+    // Add a single legend with labels for "Domestic" and "Foreign"
+    var legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", "translate(" + (width) + "," + 0 + ")");
+
+    // Add legend label for "Domestic"
+    legend.append("rect")
+        .attr("x", 0)
+        .attr("width", 18)
+        .attr("height", 18)
+        .attr("fill", colorScale("Domestic"));
+
+    legend.append("text")
+        .attr("x", 25)
+        .attr("y", 9)
+        .attr("dy", ".35em")
+        .style("text-anchor", "start")
+        .style("fill", "white")
+        .text("Domestic");
+
+    // Add legend label for "Foreign"
+    legend.append("rect")
+        .attr("x", 0)
+        .attr("y", 25)
+        .attr("width", 18)
+        .attr("height", 18)
+        .attr("fill", colorScale("Foreign"));
+
+    legend.append("text")
+        .attr("x", 25)
+        .attr("y", 34)
+        .attr("dy", ".35em")
+        .style("text-anchor", "start")
+        .style("fill", "white")
+        .text("Foreign");
+
+}
+
 
 // Function to create the chord diagram
 function createChordChart(data) {
@@ -471,15 +778,14 @@ function createChordChart(data) {
     d3.select("#chart").html("");
     d3.select("#legend").html("");
 
-    // Set the background color to white for the chart element
-    d3.select("#chart").style("background-color", null);
-
     // Get the regions and create the chord matrix
     var regions = Object.keys(data);
 
+    console.log(regions)
+
     // Define the width and height of the chord diagram
     var width = 800;
-    var height = 800;
+    var height = 500;
 
     // Calculate the total value of all regions except Sarawak
     var total = d3.sum(Object.values(data));
@@ -568,11 +874,38 @@ var yearSlider;
 var sliderTitle;
 var currentChartType = "chord";
 
+// Function to show the year slider
+function showYearSlider() {
+
+    var yearSlider = document.getElementById("year");
+    var startYear = document.getElementById("StartYear");
+    var endYear = document.getElementById("EndYear")
+    var sliderTitle = document.getElementById("sliderTitle");
+
+    yearSlider.style.display = "block";
+    startYear.style.display = "block";
+    endYear.style.display = "block";
+    sliderTitle.style.display = "block";
+}
+
+// Function to hide the year slider
+function hideYearSlider() {
+    var yearSlider = document.getElementById("year");
+    var startYear = document.getElementById("StartYear");
+    var endYear = document.getElementById("EndYear")
+    var sliderTitle = document.getElementById("sliderTitle");
+
+    yearSlider.style.display = "none";
+    startYear.style.display = "none";
+    endYear.style.display = "none";
+    sliderTitle.style.display = "none";
+}
+
 // Function to update the title with the selected year
 function updateSliderTitle() {
     var selectedYear = yearSlider.value;
     sliderTitle.textContent = `Sarawak Visitor in ${selectedYear}`;
-    updateCharts(selectedYear, currentChartType); // Update your chart here
+    updateCharts(selectedYear, currentChartType); // Update chart
 }
 
 // Initialize the page
@@ -580,6 +913,7 @@ document.addEventListener("DOMContentLoaded", function () {
     yearSlider = document.getElementById("year"); // Define yearSlider in this scope
     var pieChartButton = document.getElementById("pieChartButton");
     var barChartButton = document.getElementById("barChartButton");
+    var lineChartButton = document.getElementById("lineChartButton");
     var ChordChartButton = document.getElementById("ChordChartButton");
     sliderTitle = document.getElementById('sliderTitle');
 
@@ -603,6 +937,12 @@ document.addEventListener("DOMContentLoaded", function () {
     // Add event listener for the bar chart button
     barChartButton.addEventListener("click", function () {
         currentChartType = "bar";
+        updateCharts(yearSlider.value, currentChartType);
+    });
+
+    // Add event listener for the bar chart button
+    lineChartButton.addEventListener("click", function () {
+        currentChartType = "line";
         updateCharts(yearSlider.value, currentChartType);
     });
 
