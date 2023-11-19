@@ -11,13 +11,10 @@ function updateCharts(selectedYear, chartType) {
     else if (chartType === "bar") {
         d3.csv("data/visitor_arrival.csv").then(function (data) {
             // Get data by year
-            var filteredData = data.filter(function (d) {
-                d.Domestic = parseInt(d.Domestic); // Convert to integer
-                d.Foreign = parseInt(d.Foreign); // Convert to integer
-                return d.Year === selectedYear; // Return selected year value
-            });
+            var yearData = data.filter(item => item.Year == selectedYear);
+            console.log(yearData)
 
-            createBarChart(filteredData);
+            createBarChart(yearData);
             showYearSlider()
         });
     }
@@ -41,16 +38,23 @@ function updateCharts(selectedYear, chartType) {
             hideYearSlider(); // Show the year slider
         });
     }
-    else if (chartType === "chord") {
+    else if (chartType === "region") {
         d3.csv("data/visitor_region.csv").then(function (data) {
             // Filter data for the selected year
             var yearData = data.filter(item => item.Year == selectedYear);
 
+            // Parse numeric columns as numbers
+            yearData.forEach(function (d) {
+                d.Domestic = parseFloat(d.Domestic);
+                d.Foreign = parseFloat(d.Foreign);
+            });
+
+            console.log(yearData)
+
             // Create a chord chart using the grouped data
-            createChordChart(groupDataByRegion(yearData));
+            createRegionChart(yearData);
             showYearSlider()
 
-            console.log(groupDataByRegion(yearData))
         });
     }
     else {
@@ -58,74 +62,6 @@ function updateCharts(selectedYear, chartType) {
     }
 }
 
-
-
-// Function to group data by regions and sum the values
-function groupDataByRegion(data) {
-    var regionMapping = {
-        "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
-        "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
-        "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
-        "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
-        "Americas": ["Canada", "USA", "Latin America", "Latin America"],
-        "Oceania": ["Australia", "New Zealand"],
-        "Malaysia": ["Peninsular Malaysia", "Sabah"],
-        "Others": ["Others", "Arabs"],
-    };
-
-    var groupedData = {
-        Sarawak: 0, // Initialize Sarawak with 0 value
-    };
-
-    // Calculate the total value of all regions
-    var total = 0;
-
-    // Iterate through the data and sum the values for each region
-    data.forEach(d => {
-        Object.keys(regionMapping).forEach(region => {
-            var columns = regionMapping[region];
-            var regionTotal = columns.reduce((sum, columnName) => sum + (+d[columnName] || 0), 0);
-            groupedData[region] = (groupedData[region] || 0) + regionTotal;
-        });
-    });
-
-    // Calculate the fixed value for Sarawak (10% of the total)
-    total = d3.sum(Object.values(groupedData));
-    var sarawakValue = 0.1 * total;
-
-    // Add the fixed value to Sarawak
-    groupedData.Sarawak = Math.round(sarawakValue);
-
-    console.log("hahaha",groupedData)
-
-    return groupedData;
-}
-
-function Matrix(data) {
-    var regions = Object.keys(data);
-    var numRegions = regions.length;
-
-    console.log("regiondkwhatdata", data)
-
-    // Calculate the total value of all regions
-    var total = regions.reduce((sum, region) => sum + data[region], 0);
-
-    // Initialize an empty matrix with zeros
-    var matrix = Array.from({ length: numRegions }, () => Array(numRegions).fill(0));
-
-    regions.forEach((region, i) => {
-        regions.forEach((otherRegion, j) => {
-            if (i !== j) {
-                // Calculate the value for the connection between regions
-                matrix[i][j] = (0.9 * data[region] * data[otherRegion]) / (0.1 * total * (numRegions - 1));
-            }
-        });
-    });
-
-    console.log(matrix)
-
-    return matrix;
-}
 
 // Function to create a pie chart
 function createPieChart(yearData) {
@@ -315,7 +251,7 @@ function createBarChart(data) {
     d3.select("#chart").html("");
     d3.select("#legend").html("");
 
-    var margin = { top: 80, right: 50, bottom: 30, left: 100 };
+    var margin = { top: 60, right: 50, bottom: 30, left: 100 };
     var width = 800 - margin.left - margin.right;
     var height = 500 - margin.top - margin.bottom;
 
@@ -326,29 +262,36 @@ function createBarChart(data) {
         .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+    // Calculate the total value for each data point
+    data.forEach(function (d) {
+        d.Foreign = +d.Foreign; // Convert Foreign to a number
+        d.Domestic = +d.Domestic; // Convert Domestic to a number
+        d.Total = d.Foreign + d.Domestic;
+    });
+
     var xScale = d3.scaleBand()
         .domain(data.map(function (d) { return d.Month; }))
         .range([0, width])
         .padding(0.05);
 
-    // Calculate the percentage values for each category
-    data.forEach(function (d) {
-        d.Total = d.Domestic + d.Foreign;
-        d.Domestic = (d.Domestic / d.Total);
-        d.Foreign = (d.Foreign / d.Total);
-    });
+    // Calculate the maximum total value in your data
+    var maxTotal = d3.max(data, function (d) { return d.Total; });
 
+    // Determine the number of ticks you want on the y-axis dynamically based on maxTotal
+    var numTicks = Math.min(10, Math.ceil(maxTotal / 1000)); // Adjust the number of ticks as needed
+
+    // Adjust the yScale domain and ticks based on the maximum total value and numTicks
     var yScale = d3.scaleLinear()
-        .domain([0, 1]) // Set the y-axis scale to a percentage range (0-100)
+        .domain([0, maxTotal]) // Use maxTotal as the y-axis upper limit
+        .nice(numTicks) // Generate nice ticks based on numTicks
         .range([height, 0]);
 
     var colorScale = d3.scaleOrdinal()
-        .domain(["Domestic", "Foreign"])
-        .range(["#28a745", "#007bff"]);
+        .domain(["Foreign", "Domestic"])
+        .range(["#007bff", "#28a745"]);
 
     var stack = d3.stack()
-        .keys(["Domestic", "Foreign"]);
-
+        .keys(["Foreign", "Domestic"]);
 
     var series = stack(data);
 
@@ -377,31 +320,37 @@ function createBarChart(data) {
         .attr("y", function (d) { return yScale(d[1]); })
         .attr("height", function (d) { return yScale(d[0]) - yScale(d[1]); })
         .attr("width", xScale.bandwidth())
-        .on("mouseover", function (event, d) {
+        .on("mousemove", function (event, d) {
             var category = d3.select(this.parentNode).datum().key; // Get the category (Domestic or Foreign)
-            var value = d.data[category];
             var total = d.data.Total;
-            var label = Math.round(d.data[category] * total);
+            var value = Math.round(d[1] - d[0]); // Value inside the bar
 
-            var tooltipText = category + ": " + label + ", " + (value * 100).toFixed(2) + "% (Total: " + total + ")";
+            var tooltipText = category + ": " + value + "<br>" + " (Total: " + total + ")";
 
-            // Display the tooltip and update its position to follow the cursor
             tooltip
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 20) + "px")
                 .style("display", "block")
-                .text(tooltipText);
-        })
-        .on("mousemove", function (event) {
-            // Update the tooltip position to follow the cursor
-            tooltip
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY - 20) + "px");
+                .html(tooltipText); // Use .html() to interpret line breaks ("<br>")
         })
         .on("mouseout", function () {
-            // Hide the tooltip on mouseout
             tooltip.style("display", "none");
         });
+
+    // Add text labels inside the bars to display the values at the center
+    groups.selectAll("text")
+        .data(function (d) { return d; })
+        .enter().append("text")
+        .attr("x", function (d) { return xScale(d.data.Month) + xScale.bandwidth() / 2; }) // Center text horizontally
+        .attr("y", function (d) { return (yScale(d[0]) + yScale(d[1])) / 2; }) // Center text vertically
+        .attr("dy", "0.3em")
+        .attr("text-anchor", "middle")
+        .style("fill", "white")
+        .style("user-select", "none")
+        .style("font-size", "10")
+        .style("pointer-events", "none")
+        .text(function (d) { return Math.round(d[1] - d[0]); });
+
 
     // Change the color of the entire axis (ticks, tick text, and axis line) to white
     svg.append("g")
@@ -414,7 +363,7 @@ function createBarChart(data) {
 
     svg.append("g")
         .call(d3.axisLeft(yScale)
-            .tickFormat(d3.format(".0%"))) // Format y-axis as percentage
+            .tickFormat(d3.format(".0f"))) // Format y-axis as integer
         .selectAll("text")
         .style("fill", "white") // Y-axis text color
         .selectAll(".tick line")
@@ -428,7 +377,7 @@ function createBarChart(data) {
     svg.selectAll(".tick line")
         .style("stroke", "white"); // Tick lines color
 
-
+    // Change the position of the chart title to the center
     svg.append("text")
         .attr("x", width / 2)
         .attr("y", -30)
@@ -778,108 +727,317 @@ function createLineChart(yearData) {
 
 
 // Function to create the chord diagram
-function createChordChart(data) {
+function createRegionChart(yearData) {
     // Clear any existing chart
     d3.select("#chart").html("");
     d3.select("#legend").html("");
 
-    // Get the regions and create the chord matrix
-    var regions = Object.keys(data);
+    var regionMapping = {
+        "Domestic": ["Peninsular Malaysia", "Sabah"],
+        "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
+        "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
+        "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
+        "Others": ["Others", "Arabs", "Canada", "USA", "Latin America", "Latin America"],
+        "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
+        "Oceania": ["Australia", "New Zealand"],
+    };
 
-    console.log("dontknow",regions)
+    // Initialize an empty object to store region values
+    var regionData = {};
 
-    // Define the width and height of the chord diagram
+    // Populate regionData with values for each region
+    for (var yearDatum of yearData) {
+        for (var region in regionMapping) {
+            var countriesInRegion = regionMapping[region];
+            var regionValue = d3.sum(countriesInRegion, country => +yearDatum[country] || 0);
+            regionData[region] = (regionData[region] || 0) + regionValue;
+        }
+    }
+
+    // Convert regionData object into an array of objects
+    var pieData = Object.keys(regionData).map(region => ({
+        label: region,
+        value: regionData[region]
+    }));
+
+    // Calculate the total
+    var total = d3.sum(pieData, d => d.value);
+
+    // Set chart dimensions
     var width = 800;
     var height = 500;
+    var radius = Math.min(width, height) / 2;
 
-    // Calculate the total value of all regions except Sarawak
-    var total = d3.sum(Object.values(data));
+    var customColors = ["#ff6961", "#ffb480", "#f8f38d", "#42d6a4", "#08cad1", "#9d94ff"];
 
-    console.log("dontknow what",total)
 
-    // Calculate the fixed value for Sarawak (10% of the total excluding Sarawak)
-    var sarawakValue = 0.1 * total;
+    // Create a color scale for the pie chart segments
+    var color = d3.scaleOrdinal()
+        .domain(pieData.map(d => d.label))
+        .range(customColors); // Use a color scheme
 
-    // Create an SVG element for the chord diagram
-    var svg = d3.select("#chart")
-        .append("svg")
+    // Create an SVG element
+    var svg = d3.select("#chart").append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
-        .attr("transform", `translate(${width / 2},${height / 2})`);
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-    // Create a chord layout
-    var chords = d3.chord()
-        .padAngle(0.05)
-        .sortSubgroups(d3.descending)
-        .sortChords(d3.ascending);
-
-    // Create a color scale for the regions
-    var colorScale = d3.scaleOrdinal()
-        .domain(d3.range(regions.length))
-        .range(d3.schemeCategory10);
-
-    // Create the arcs for the regions
+    // Define the arc function to create pie segments
     var arc = d3.arc()
-        .innerRadius(width / 2 * 0.35)
-        .outerRadius(width / 2 * 0.4);
+        .outerRadius(radius - 10)
+        .innerRadius(radius - 110); // Inner radius for the doughnut effect
 
-    // Create the ribbons connecting the regions
-    var ribbon = d3.ribbon()
-        .radius(width / 2 * 0.35);
+    // Create a pie layout
+    var pie = d3.pie()
+        .sort(null)
+        .value(d => d.value);
 
-    // Create a fixed arc for Sarawak
-    var sarawakArc = d3.arc()
-        .innerRadius(width / 2 * 0.35)
-        .outerRadius(width / 2 * 0.4)
-        .startAngle(0)
-        .endAngle((sarawakValue / total) * 2 * Math.PI);
+    // Create the pie chart segments
+    var arcs = svg.selectAll(".arc")
+        .data(pie(pieData))
+        .enter()
+        .append("g")
+        .attr("class", "arc");
 
-    // Append the fixed Sarawak arc
-    svg.append("path")
-        .attr("class", "arc")
-        .attr("d", sarawakArc)
-        .style("fill", colorScale(0)); // Set a specific color for Sarawak
+    // Calculate the position for the hover text
+    var textX = 0;
+    var textY = 0;
 
-    // Create groups for the arcs of other regions
-    var group = svg.selectAll(".group")
-        .data(chords(Matrix(data)).groups)
-        .enter().append("g")
-        .attr("class", "group");
+    // Create a group for text elements in the center
+    var centerTextGroup = svg.append("g")
+        .attr("class", "center-text-group")
+        .attr("transform", `translate(${textX}, ${textY})`)
+        .style("font-size", "26px")
+        .style("font-weight", "700")
+        .style("fill", "white")
+        .style("text-anchor", "middle")
+        .style("dominant-baseline", "middle");
 
-    // Create the arcs for other regions
-    group.append("path")
-        .attr("class", "arc")
+    // Initialize the center text with the total sum value
+    var centerText = centerTextGroup.append("text")
+        .attr("class", "center-text")
+        .style("pointer-events", "none");
+
+    centerText.append("tspan")
+        .attr("x", textX)
+        .attr("dy", "-0.7em")
+        .text("Total Arrival");
+
+    centerText.append("tspan")
+        .attr("x", textX)
+        .attr("dy", "1.5em")
+        .text(total);
+
+    // Update the center text with the segment's value on hover
+    arcs.on("mouseover", function (event, d) {
+        centerText.text("");
+    })
+        .on("mouseout", function () {
+            centerText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "-0.7em")
+                .text("Total Arrival");
+
+            centerText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "1.5em")
+                .text(total);
+        });
+
+    // Create pie chart segments
+    arcs.append("path")
         .attr("d", arc)
-        .style("fill", (d) => colorScale(d.index));
+        .attr("fill", d => color(d.data.label))
+        .style("stroke", "white")
+        .style("cursor", "pointer")
+        .on("mouseover", function (event, d) {
+            // segment effect
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style("opacity", 0.8);
 
-    // Create labels for the regions
-    group.append("text")
-        .each(function (d) { d.angle = (d.startAngle + d.endAngle) / 2; })
-        .attr("dy", ".35em")
-        .attr("transform", function (d) {
-            return `rotate(${(d.angle * 180 / Math.PI - 90)}) ` +
-                `translate(${width / 2 * 0.47}) ` +
-                (d.angle > Math.PI ? "rotate(180)" : "");
+            // Display the label and value text in the center on separate lines
+            var hoverText = svg.append("text")
+                .attr("class", "hover-text")
+                .attr("transform", `translate(${textX}, ${textY})`)
+                .style("font-size", "26px")
+                .style("font-weight", "700")
+                .style("fill", "white")
+                .style("text-anchor", "middle");
+
+            hoverText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "-0.7em")
+                .text(d.data.label);
+
+            hoverText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "1.5em")
+                .text(d.data.value);
         })
-        .style("text-anchor", function (d) { return d.angle > Math.PI ? "end" : null; })
-        .text((d) => regions[d.index]);
+        .on("mouseout", function () {
+            // Remove the hover text on mouseout
+            svg.select(".hover-text").remove()
 
-    // Create ribbons connecting the regions
-    svg.selectAll(".chord")
-        .data(chords(Matrix(data)).filter((d) => d.source.index !== 0))
-        .enter().append("path")
-        .attr("class", "chord")
-        .attr("d", ribbon)
-        .style("fill", (d) => colorScale(d.source.index))
-        .style("opacity", 0.8);
+            // segment effect back to default
+            d3.select(this)
+                .transition()
+                .duration(200)
+                .style("opacity", 1);
+        });
+
+    // Add a click event handler to the pie chart segments
+    arcs.on("click", function (event, d) {
+        // Remove any existing bar chart
+        d3.select("#bar-chart").remove();
+
+        // Create a container for the bar chart
+        var barChartContainer = d3.select("body")
+            .append("div")
+            .attr("id", "bar-chart")
+            .style("position", "absolute")
+            .style("background-color", "white")
+            .style("border", "1px solid #ccc")
+            .style("padding", "10px")
+            .style("box-shadow", "2px 2px 5px #888")
+            .style("pointer-events", "none"); // Prevent interaction with the container
+
+        // Calculate the data for the bar chart based on the clicked segment
+        var clickedRegion = d.data.label;
+        var regionData = yearData[0]; // Assuming you have data for a specific year
+        var barChartData = Object.entries(regionData)
+            .filter(([country, value]) => regionMapping[clickedRegion].includes(country))
+            .map(([country, value]) => ({ country, value }));
+
+        // Sort the data in descending order based on value
+        barChartData.sort((a, b) => b.value - a.value);
+
+        // Set the dimensions for the bar chart
+        var barChartWidth = 400;
+        var barChartHeight = 300;
+        var margin = { top: 200, right: 10, bottom: 20, left: 10 };
+
+        // Create an SVG element for the bar chart
+        var svg = barChartContainer
+            .append("svg")
+            .attr("width", barChartWidth)
+            .attr("height", barChartHeight);
+
+        var width = barChartWidth - margin.left - margin.right;
+        var height = barChartHeight - margin.top - margin.bottom;
+
+        // Create a group for the bar chart
+        var barChart = svg.append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Create scales for the bar chart
+        var xScale = d3.scaleBand()
+            .domain(barChartData.map(d => d.country))
+            .range([0, width])
+            .padding(0.1);
+
+        var yScale = d3.scaleLinear()
+            .domain([0, d3.max(barChartData, d => d.value)])
+            .nice()
+            .range([height, 0]);
+
+        // Add bars to the bar chart
+        barChart.selectAll(".bar")
+            .data(barChartData)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => xScale(d.country))
+            .attr("y", d => yScale(d.value))
+            .attr("width", xScale.bandwidth())
+            .attr("height", d => height - yScale(d.value))
+            .style("fill", "steelblue");
+
+        // Add text labels to the bottom of the bars
+        barChart.selectAll(".label")
+            .data(barChartData)
+            .enter()
+            .append("text")
+            .attr("class", "label")
+            .attr("x", d => xScale(d.country) + xScale.bandwidth() / 2)
+            .attr("y", d => {
+                if (height - yScale(d.value) > 20) {
+                    return height - 5; // Place inside the bar if there is enough space
+                } else {
+                    return height + 15; // Place below the bar
+                }
+            })
+            .style("text-anchor", "middle")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("fill", "black")
+            .text(d => d.country);
+
+        // Add numbers at the top of each bar
+        barChart.selectAll(".number")
+            .data(barChartData)
+            .enter()
+            .append("text")
+            .attr("class", "number")
+            .attr("x", d => xScale(d.country) + xScale.bandwidth() / 2)
+            .attr("y", d => yScale(d.value) - 5) // Position above the bars
+            .style("text-anchor", "middle")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .style("fill", "black")
+            .text(d => d.value);
+
+        // Position the bar chart container next to the mouse cursor
+        barChartContainer.style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - barChartHeight / 2) + "px");
+
+
+
+    });
+
+    // Create legend
+    var legend = d3.select("#chart")
+        .append("div")
+        .attr("class", "legend")
+        .style("position", "absolute")
+        .style("margin-top", "150px")
+        .style("margin-left", '700px')
+        .style("display", "block")
+        .style("color", "white");
+
+    var keys = legend.selectAll(".key")
+        .data(pieData)
+        .enter().append("div")
+        .attr("class", "key")
+        .style("display", "flex")
+        .style("align-items", "center")
+        .style("margin-right", "20px");
+
+    keys.append("div")
+        .style("height", "10px")
+        .style("width", "10px")
+        .style("margin", "5px 5px")
+        .style("background-color", (d) => color(d.label)); // Use label for color mapping
+
+    keys.append("div")
+        .attr("class", "name")
+        .text((d) => d.label); // Display the exact label
+
+    keys.exit().remove();
+
+
 }
 
 
 // Declare variables in a scope accessible by all functions
 var yearSlider;
 var sliderTitle;
-var currentChartType = "chord";
+var currentChartType = "region";
+
+// Define a variable to keep track of whether the pie chart is currently displayed
+var isPieChartVisible = false;
 
 // Function to show the year slider
 function showYearSlider() {
@@ -954,7 +1112,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     ChordChartButton.addEventListener("click", function () {
-        currentChartType = "chord";
+        currentChartType = "region";
         updateCharts(yearSlider.value, currentChartType);
     });
 });
