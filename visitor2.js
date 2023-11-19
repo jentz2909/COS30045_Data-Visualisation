@@ -915,9 +915,9 @@ function createRegionChart(yearData) {
         barChartData.sort((a, b) => b.value - a.value);
 
         // Set the dimensions for the bar chart
-        var barChartWidth = 400;
+        var barChartWidth = 200; // Make the bars thinner
         var barChartHeight = 300;
-        var margin = { top: 200, right: 10, bottom: 20, left: 10 };
+        var margin = { top: 40, right: 10, bottom: 20, left: 10 };
 
         // Create an SVG element for the bar chart
         var svg = barChartContainer
@@ -955,7 +955,7 @@ function createRegionChart(yearData) {
             .attr("height", d => height - yScale(d.value))
             .style("fill", "steelblue");
 
-        // Add text labels to the bottom of the bars
+        // Add text labels to the bars (split long labels)
         barChart.selectAll(".label")
             .data(barChartData)
             .enter()
@@ -973,7 +973,14 @@ function createRegionChart(yearData) {
             .style("font-size", "12px")
             .style("font-weight", "bold")
             .style("fill", "black")
-            .text(d => d.country);
+            .text(d => {
+                // Split long labels into two lines
+                if (d.country.length > 10) {
+                    const words = d.country.split(" ");
+                    return words[0] + "\n" + words.slice(1).join(" ");
+                }
+                return d.country;
+            });
 
         // Add numbers at the top of each bar
         barChart.selectAll(".number")
@@ -992,7 +999,6 @@ function createRegionChart(yearData) {
         // Position the bar chart container next to the mouse cursor
         barChartContainer.style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - barChartHeight / 2) + "px");
-
 
 
     });
