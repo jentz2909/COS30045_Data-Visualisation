@@ -1,24 +1,24 @@
 // Update the charts based on selected year and chart type
 function updateCharts(selectedYear, chartType) {
     // Load the data from CSV file
-    if (chartType === "pie") {
+    if (chartType === "pie") { //Choose chart type
         d3.csv("data/visitor_arrival.csv").then(function (data) {
-            var yearData = data.filter(item => item.Year == selectedYear);
+            var yearData = data.filter(item => item.Year == selectedYear); // Fillter the year
             createPieChart(yearData);
-            showYearSlider()
+            showYearSlider() // Show the year slider
         });
     }
-    else if (chartType === "bar") {
-        d3.csv("data/visitor_arrival.csv").then(function (data) {
+    else if (chartType === "bar") {//Choose chart type
+        d3.csv("data/visitor_arrival.csv").then(function (data) { 
             // Get data by year
-            var yearData = data.filter(item => item.Year == selectedYear);
+            var yearData = data.filter(item => item.Year == selectedYear);  // Fillter the year
             console.log(yearData)
 
             createBarChart(yearData);
-            showYearSlider()
+            showYearSlider() // Show the year slider
         });
     }
-    else if (chartType === "line") {
+    else if (chartType === "line") {//Choose chart type
         d3.csv("data/visitor_arrival.csv").then(function (data) {
 
             // Extract unique years from the dataset
@@ -35,10 +35,10 @@ function updateCharts(selectedYear, chartType) {
             console.log(yearData)
 
 
-            hideYearSlider(); // Show the year slider
+            hideYearSlider(); // hide the year slider
         });
     }
-    else if (chartType === "region") {
+    else if (chartType === "region") { //Choose chart type
         d3.csv("data/visitor_region.csv").then(function (data) {
             // Filter data for the selected year
             var yearData = data.filter(item => item.Year == selectedYear);
@@ -47,7 +47,7 @@ function updateCharts(selectedYear, chartType) {
 
             // Create a chord chart using the grouped data
             createRegionChart(yearData);
-            showYearSlider()
+            showYearSlider() // Show the year slider
 
         });
     }
@@ -68,7 +68,7 @@ function createPieChart(yearData) {
     var totalDomestic = d3.sum(yearData, d => +d.Domestic || 0);
     var totalForeign = d3.sum(yearData, d => +d.Foreign || 0);
 
-    // Create a new data structure with the summed values
+    // Create a new data structure with the sum values
     var pieData = [
         { label: "Domestic", value: totalDomestic },
         { label: "Foreign", value: totalForeign }
@@ -264,14 +264,18 @@ function createBarChart(data) {
     });
 
     var xScale = d3.scaleBand()
-        .domain(data.map(function (d) { return d.Month; }))
+        .domain(data.map(function (d) {
+            return d.Month; 
+        }))
         .range([0, width])
         .padding(0.05);
 
-    // Calculate the maximum total value in your data
-    var maxTotal = d3.max(data, function (d) { return d.Total; });
+    // Calculate the maximum total value
+    var maxTotal = d3.max(data, function (d) { 
+        return d.Total; 
+    });
 
-    // Determine the number of ticks you want on the y-axis dynamically based on maxTotal
+    // Determine the number of ticks on the y-axis dynamically based on maxTotal
     var numTicks = Math.min(10, Math.ceil(maxTotal / 1000)); // Adjust the number of ticks as needed
 
     // Adjust the yScale domain and ticks based on the maximum total value and numTicks
@@ -906,7 +910,7 @@ function createRegionChart(yearData) {
 
         // Calculate the data for the pie chart based on the clicked segment
         var clickedRegion = d.data.label;
-        var regionData = yearData; // Assuming you have data for a specific year
+        var regionData = yearData; // Get all the data
 
         // Initialize an empty object to store the summed citizen counts
         var citizenCounts = {};
