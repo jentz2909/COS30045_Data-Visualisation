@@ -9,7 +9,7 @@ function updateCharts(selectedYear, chartType) {
         });
     }
     else if (chartType === "bar") {//Choose chart type
-        d3.csv("data/visitor_arrival.csv").then(function (data) { 
+        d3.csv("data/visitor_arrival.csv").then(function (data) {
             // Get data by year
             var yearData = data.filter(item => item.Year == selectedYear);  // Fillter the year
             console.log(yearData)
@@ -91,15 +91,25 @@ function createPieChart(yearData) {
         .range(["#28a745", "#007bff"]);
 
     // Create an SVG element
-    var svg = d3.select("#chart").append("svg")
+    var svg = d3.select("#chart")
+        .append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
-        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+        .attr("transform", `translate(${width / 2}, ${height / 2 + 15})`);
+
+    // Add chart title
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", -height / 2 + 10) // Adjust the y-coordinate to position the title
+        .attr("text-anchor", "middle")
+        .style("fill", "white")
+        .style("font-size", "24px")
+        .text("Domestic and Foreign Visitors in Sarawak");
 
     // Define the arc function to create pie segments
     var arc = d3.arc()
-        .outerRadius(radius - 10)
+        .outerRadius(radius - 20)
         .innerRadius(radius - 110); // Inner radius for the doughnut effect
 
     // Create a pie layout
@@ -131,7 +141,7 @@ function createPieChart(yearData) {
     centerText.append("tspan")
         .attr("x", textX)
         .attr("dy", "-0.7em")
-        .text("Total Arrival");
+        .text("Total Visitors");
 
     centerText.append("tspan")
         .attr("x", textX)
@@ -146,7 +156,7 @@ function createPieChart(yearData) {
             centerText.append("tspan")
                 .attr("x", textX)
                 .attr("dy", "-0.7em")
-                .text("Total Arrival");
+                .text("Total Visitors");
 
             centerText.append("tspan")
                 .attr("x", textX)
@@ -265,14 +275,14 @@ function createBarChart(data) {
 
     var xScale = d3.scaleBand()
         .domain(data.map(function (d) {
-            return d.Month; 
+            return d.Month;
         }))
         .range([0, width])
         .padding(0.05);
 
     // Calculate the maximum total value
-    var maxTotal = d3.max(data, function (d) { 
-        return d.Total; 
+    var maxTotal = d3.max(data, function (d) {
+        return d.Total;
     });
 
     // Determine the number of ticks on the y-axis dynamically based on maxTotal
@@ -380,7 +390,7 @@ function createBarChart(data) {
         .attr("x", width / 2)
         .attr("y", -30)
         .attr("text-anchor", "middle")
-        .style("font-size", "20px")
+        .style("font-size", "24px")
         .style("fill", "white")
         .text("Visitor Arrival Over the Months");
 
@@ -682,6 +692,7 @@ function createLineChart(yearData) {
         .attr("y", 0 - (margin.top / 2))
         .attr("text-anchor", "middle")
         .style("fill", "white")
+        .style("font-size", "24px")
         .text("Visitor Arrival Over the Years");
 
 
@@ -722,7 +733,6 @@ function createLineChart(yearData) {
         .text("Foreign");
 
 }
-
 
 // Function to create the chord diagram
 function createRegionChart(yearData) {
@@ -766,6 +776,7 @@ function createRegionChart(yearData) {
     var height = 500;
     var radius = Math.min(width, height) / 2;
 
+    // CustomeColor design
     var customColors = ["#ff6961", "#ffb480", "#f8f38d", "#42d6a4", "#08cad1", "#9d94ff", "#D3D3D3"];
 
 
@@ -775,15 +786,16 @@ function createRegionChart(yearData) {
         .range(customColors); // Use a color scheme
 
     // Create an SVG element
-    var svg = d3.select("#chart").append("svg")
+    var svg = d3.select("#chart")
+        .append("svg")
         .attr("width", width)
         .attr("height", height)
         .append("g")
-        .attr("transform", `translate(${width / 2}, ${height / 2})`);
+        .attr("transform", `translate(${width / 2}, ${height / 2 + 15})`);
 
     // Define the arc function to create pie segments
     var arc = d3.arc()
-        .outerRadius(radius - 10)
+        .outerRadius(radius - 20)
         .innerRadius(radius - 110); // Inner radius for the doughnut effect
 
     // Create a pie layout
@@ -797,6 +809,15 @@ function createRegionChart(yearData) {
         .enter()
         .append("g")
         .attr("class", "arc");
+
+    // Add chart title
+    svg.append("text")
+        .attr("x", 0)
+        .attr("y", -height / 2 + 10)
+        .attr("text-anchor", "middle")
+        .style("font-size", "24px")
+        .style("fill", "white")
+        .text("Sarawak Visitor by Region"); // Text of the title
 
     // Calculate the position for the hover text
     var textX = 0;
@@ -1041,7 +1062,6 @@ function createRegionChart(yearData) {
         .text((d) => d.label); // Display the exact label
 
     keys.exit().remove();
-
 
 }
 
