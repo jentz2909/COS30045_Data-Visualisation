@@ -43,12 +43,6 @@ function updateCharts(selectedYear, chartType) {
             // Filter data for the selected year
             var yearData = data.filter(item => item.Year == selectedYear);
 
-            // Parse numeric columns as numbers
-            yearData.forEach(function (d) {
-                d.Domestic = parseFloat(d.Domestic);
-                d.Foreign = parseFloat(d.Foreign);
-            });
-
             console.log(yearData)
 
             // Create a chord chart using the grouped data
@@ -737,7 +731,7 @@ function createRegionChart(yearData) {
         "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
         "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
         "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
-        "Others": ["Others", "Arabs", "Canada", "USA", "Latin America", "Latin America"],
+        "Others": ["Others", "Arabs", "Canada", "USA", "Latin America"],
         "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
         "Oceania": ["Australia", "New Zealand"],
     };
@@ -912,10 +906,29 @@ function createRegionChart(yearData) {
 
         // Calculate the data for the pie chart based on the clicked segment
         var clickedRegion = d.data.label;
-        var regionData = yearData[0]; // Assuming you have data for a specific year
-        var pieChartData = Object.entries(regionData)
-            .filter(([country, value]) => regionMapping[clickedRegion].includes(country))
-            .map(([country, value]) => ({ label: country, value }));
+        var regionData = yearData; // Assuming you have data for a specific year
+
+        // Initialize an empty object to store the summed citizen counts
+        var citizenCounts = {};
+
+        // Iterate through each data object in yearData and sum the citizen counts for the clicked region
+        regionData.forEach(function (monthData) {
+            Object.entries(monthData)
+                .filter(([country, value]) => regionMapping[clickedRegion].includes(country))
+                .forEach(([country, value]) => {
+                    citizenCounts[country] = (citizenCounts[country] || 0) + (+value || 0);
+                });
+        });
+
+        // Convert citizenCounts object into an array of objects
+        var pieChartData = Object.keys(citizenCounts).map(country => ({
+            label: country,
+            value: citizenCounts[country]
+        }));
+
+        console.log(clickedRegion)
+        console.log(regionData)
+        console.log(pieChartData)
 
         // Sort pieChartData by value in descending order
         pieChartData.sort((a, b) => b.value - a.value);
