@@ -1045,7 +1045,7 @@ function createRegionChart(yearData) {
 // Declare variables in a scope accessible by all functions
 var yearSlider;
 var sliderTitle;
-var currentChartType = "region";
+var currentChartType = "pie";
 
 // Define a variable to keep track of whether the pie chart is currently displayed
 var isPieChartVisible = false;
