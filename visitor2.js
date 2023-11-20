@@ -768,7 +768,7 @@ function createRegionChart(yearData) {
     var height = 500;
     var radius = Math.min(width, height) / 2;
 
-    var customColors = ["#ff6961", "#ffb480", "#f8f38d", "#42d6a4", "#08cad1", "#9d94ff"];
+    var customColors = ["#ff6961", "#ffb480", "#f8f38d", "#42d6a4", "#08cad1", "#9d94ff", "#D3D3D3"];
 
 
     // Create a color scale for the pie chart segments
@@ -886,17 +886,23 @@ function createRegionChart(yearData) {
                 .transition()
                 .duration(200)
                 .style("opacity", 1);
-        });
+        })
 
     // Add a click event handler to the pie chart segments
     arcs.on("click", function (event, d) {
-        // Remove any existing bar chart
-        d3.select("#bar-chart").remove();
+        // Check if the pie chart container is already present
+        var pieChartContainer = d3.select("#pie-chart");
 
-        // Create a container for the bar chart
-        var barChartContainer = d3.select("body")
+        // Remove the existing pie chart if it's open
+        if (!pieChartContainer.empty()) {
+            pieChartContainer.remove();
+            return; // Exit the function to prevent creating a new one
+        }
+
+        // Create a container for the pie chart
+        pieChartContainer = d3.select("body")
             .append("div")
-            .attr("id", "bar-chart")
+            .attr("id", "pie-chart")
             .style("position", "absolute")
             .style("background-color", "white")
             .style("border", "1px solid #ccc")
@@ -904,104 +910,90 @@ function createRegionChart(yearData) {
             .style("box-shadow", "2px 2px 5px #888")
             .style("pointer-events", "none"); // Prevent interaction with the container
 
-        // Calculate the data for the bar chart based on the clicked segment
+        // Calculate the data for the pie chart based on the clicked segment
         var clickedRegion = d.data.label;
         var regionData = yearData[0]; // Assuming you have data for a specific year
-        var barChartData = Object.entries(regionData)
+        var pieChartData = Object.entries(regionData)
             .filter(([country, value]) => regionMapping[clickedRegion].includes(country))
-            .map(([country, value]) => ({ country, value }));
+            .map(([country, value]) => ({ label: country, value }));
 
-        // Sort the data in descending order based on value
-        barChartData.sort((a, b) => b.value - a.value);
+        // Sort pieChartData by value in descending order
+        pieChartData.sort((a, b) => b.value - a.value);
 
-        // Set the dimensions for the bar chart
-        var barChartWidth = 200; // Make the bars thinner
-        var barChartHeight = 300;
-        var margin = { top: 40, right: 10, bottom: 20, left: 10 };
+        // Set dimensions for the pie chart
+        var pieChartWidth = 200;
+        var pieChartHeight = 200;
+        var radius = Math.min(pieChartWidth, pieChartHeight) / 2;
 
-        // Create an SVG element for the bar chart
-        var svg = barChartContainer
+        // Create an SVG element for the pie chart
+        var svg = pieChartContainer
             .append("svg")
-            .attr("width", barChartWidth)
-            .attr("height", barChartHeight);
+            .attr("width", pieChartWidth)
+            .attr("height", pieChartHeight)
+            .append("g")
+            .attr("transform", `translate(${pieChartWidth / 2},${pieChartHeight / 2})`);
 
-        var width = barChartWidth - margin.left - margin.right;
-        var height = barChartHeight - margin.top - margin.bottom;
+        // Create an arc function for the pie chart segments
+        var arc = d3.arc()
+            .outerRadius(radius - 10)
+            .innerRadius(0);
 
-        // Create a group for the bar chart
-        var barChart = svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`);
+        // Create a pie layout for the pie chart
+        var pie = d3.pie()
+            .sort(null)
+            .value(d => d.value);
 
-        // Create scales for the bar chart
-        var xScale = d3.scaleBand()
-            .domain(barChartData.map(d => d.country))
-            .range([0, width])
-            .padding(0.1);
-
-        var yScale = d3.scaleLinear()
-            .domain([0, d3.max(barChartData, d => d.value)])
-            .nice()
-            .range([height, 0]);
-
-        // Add bars to the bar chart
-        barChart.selectAll(".bar")
-            .data(barChartData)
+        // Create pie chart segments
+        var pieArcs = svg.selectAll(".pie-arc")
+            .data(pie(pieChartData))
             .enter()
-            .append("rect")
-            .attr("class", "bar")
-            .attr("x", d => xScale(d.country))
-            .attr("y", d => yScale(d.value))
-            .attr("width", xScale.bandwidth())
-            .attr("height", d => height - yScale(d.value))
-            .style("fill", "steelblue");
+            .append("g")
+            .attr("class", "pie-arc");
 
-        // Add text labels to the bars (split long labels)
-        barChart.selectAll(".label")
-            .data(barChartData)
+
+        // Define the custom color range
+        var customColors = ["#F6EBEB", "#F8CDD2", "#FAAEBB", "#FC8FA8", "#FD7099", "#FF508C", "#FF3083"];
+
+        // Create an ordinal scale with the custom color range
+        var color = d3.scaleOrdinal()
+            .domain(pieData.map(d => d.label))
+            .range(customColors);
+
+
+        // Add path elements to represent the segments
+        pieArcs.append("path")
+            .attr("d", arc)
+            .attr("fill", d => color(d.data.label))
+            .style("stroke", "white");
+
+        // Create a legend for the pie chart
+        var legend = pieChartContainer.append("div")
+            .attr("class", "legend")
+            .style("margin-top", "10px");
+
+        var legendItems = legend.selectAll(".legend-item")
+            .data(pieChartData)
             .enter()
-            .append("text")
-            .attr("class", "label")
-            .attr("x", d => xScale(d.country) + xScale.bandwidth() / 2)
-            .attr("y", d => {
-                if (height - yScale(d.value) > 20) {
-                    return height - 5; // Place inside the bar if there is enough space
-                } else {
-                    return height + 15; // Place below the bar
-                }
-            })
-            .style("text-anchor", "middle")
-            .style("font-size", "12px")
-            .style("font-weight", "bold")
-            .style("fill", "black")
-            .text(d => {
-                // Split long labels into two lines
-                if (d.country.length > 10) {
-                    const words = d.country.split(" ");
-                    return words[0] + "\n" + words.slice(1).join(" ");
-                }
-                return d.country;
-            });
+            .append("div")
+            .attr("class", "legend-item");
 
-        // Add numbers at the top of each bar
-        barChart.selectAll(".number")
-            .data(barChartData)
-            .enter()
-            .append("text")
-            .attr("class", "number")
-            .attr("x", d => xScale(d.country) + xScale.bandwidth() / 2)
-            .attr("y", d => yScale(d.value) - 5) // Position above the bars
-            .style("text-anchor", "middle")
-            .style("font-size", "12px")
-            .style("font-weight", "bold")
-            .style("fill", "black")
-            .text(d => d.value);
+        legendItems.append("div")
+            .style("width", "10px")
+            .style("height", "10px")
+            .style("background-color", d => color(d.label))
+            .style("display", "inline-block")
+            .style("margin-right", "5px");
 
-        // Position the bar chart container next to the mouse cursor
-        barChartContainer.style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - barChartHeight / 2) + "px");
+        legendItems.append("span")
+            .text(d => `${d.label}: ${d.value} visitors`);
 
+        // Position the pie chart container next to the mouse cursor
+        pieChartContainer.style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - pieChartHeight / 2) + "px");
 
     });
+
+
 
     // Create legend
     var legend = d3.select("#chart")
