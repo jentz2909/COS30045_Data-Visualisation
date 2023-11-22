@@ -1114,7 +1114,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var pieChartButton = document.getElementById("pieChartButton");
     var barChartButton = document.getElementById("barChartButton");
     var lineChartButton = document.getElementById("lineChartButton");
-    var ChordChartButton = document.getElementById("ChordChartButton");
+    var lineChartButton = document.getElementById("lineChartButton");
     sliderTitle = document.getElementById('sliderTitle');
 
     // Add an event listener to the slider input
@@ -1146,7 +1146,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateCharts(yearSlider.value, currentChartType);
     });
 
-    ChordChartButton.addEventListener("click", function () {
+    lineChartButton.addEventListener("click", function () {
         currentChartType = "region";
         updateCharts(yearSlider.value, currentChartType);
     });
