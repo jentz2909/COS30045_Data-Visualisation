@@ -1031,8 +1031,6 @@ function createRegionChart(yearData) {
 
     });
 
-
-
     // Create legend
     var legend = d3.select("#chart")
         .append("div")
