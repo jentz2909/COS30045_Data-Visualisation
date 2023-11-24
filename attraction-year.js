@@ -670,6 +670,6 @@ window.addEventListener("load", loadCharts);
 // yearly visitor by district: https://chat.openai.com/c/6c97e719-3055-418a-9c4a-7807fe92b9e5
 // https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/2935c23f-eb6d-4ddc-bbda-0d59187bed10
 // extract gdp data: https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/0d375af7-4a69-4481-b81c-0319d3ea0220
-// combinen gdp growth with visitor: https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/bb38d1a6-b9b1-4afb-a4f4-3bad4c6f9e25
+// combine gdp growth with visitor: https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/bb38d1a6-b9b1-4afb-a4f4-3bad4c6f9e25
 // https://chat.openai.com/g/g-HMNcP6w7d-data-analysis/c/53ca443f-dc5d-4df8-8efe-0a3115028879
 // https://chat.openai.com/g/g-YyyyMT9XH-chatgpt-classic/c/d08357b3-e8c2-4fcd-bb3d-91bb9336bd96

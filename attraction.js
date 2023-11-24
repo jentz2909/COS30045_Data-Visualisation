@@ -69,7 +69,8 @@ function handlePlaceChange() {
 function zoomed(event) {
   const { transform } = event;
   svg.selectAll("path").attr("transform", transform);
-  svg.selectAll("circle").attr("transform", transform);
+  // svg.selectAll("circle").attr("transform", transform);
+  svg.selectAll("image").attr("transform", transform);
 }
 
 function formatString(str) {
@@ -415,26 +416,98 @@ function renderMap() {
         );
       });
 
+    // svg
+    //   .selectAll("circle")
+    //   .data(locationData)
+    //   .enter()
+    //   .append("circle")
+    //   .attr("fill", "red")
+    //   .attr("r", 4)
+    //   .attr("cx", (d) => projection([+d.lon, +d.lat])[0])
+    //   .attr("cy", (d) => projection([+d.lon, +d.lat])[1])
+    //   .attr("data-bs-toggle", "popover")
+    //   .attr("data-bs-html", "true")
+    //   // .attr("data-bs-trigger", "hover")
+    //   .attr("data-bs-trigger", "manual") // Set trigger to manual
+    //   .style("cursor", "pointer")
+    //   .on("mouseover", function (event, d) {
+    //     d3.select(this)
+    //       .transition()
+    //       .duration(200) // Adjust as needed for animation speed
+    //       .attr("r", 8) // Adjust to desired hover size
+    //       .attr("fill", "blue"); // Change color if desired
+
+    // // Find visitor data for the current park
+    // const visitorInfo = visitors.find((v) => v.name === d.name);
+
+    // let content;
+    // if (visitorInfo) {
+    //   switch (selectedAttraction) {
+    //     case "national-parks":
+    //     case "culture-village":
+    //       const data = [
+    //         { type: "domestic", value: +visitorInfo.domestic },
+    //         { type: "foreign", value: +visitorInfo.foreign },
+    //       ];
+
+    //       content = createPieChartElement(data, d.description);
+    //       break;
+    //     case "museums":
+    //       content = `<p class="text-justify">${d.description}</p> <p><strong>Total Visitors: </strong> ${visitorInfo.visitor}</p>`;
+    //       break;
+    //     default:
+    //       content = `<p class="text-justify">${d.description}</p>`;
+    //       break;
+    //   }
+    // } else {
+    //   content = `<p class="text-justify">${d.description}</p> <p>No data available</p>`;
+    // }
+
+    // const popover = new bootstrap.Popover(this, {
+    //   title: d.name,
+    //   content: content,
+    //   html: true,
+    //   placement: "top",
+    //   trigger: "manual",
+    // });
+
+    // popover.show();
+    //   })
+    //   .on("mouseout", function () {
+    //     d3.select(this)
+    //       .transition()
+    //       .duration(200) // Adjust as needed for animation speed
+    //       .attr("r", 4) // Reset to original size
+    //       .attr("fill", "red"); // Reset to original color
+
+    // const popover = bootstrap.Popover.getInstance(this);
+    // if (popover) popover.hide();
+    //   });
+
+    // ---
+
     svg
-      .selectAll("circle")
+      .selectAll("image")
       .data(locationData)
       .enter()
-      .append("circle")
-      .attr("fill", "red")
-      .attr("r", 4)
-      .attr("cx", (d) => projection([+d.lon, +d.lat])[0])
-      .attr("cy", (d) => projection([+d.lon, +d.lat])[1])
+      .append("image")
+      .attr("href", "./assets/pin.svg")
+      .attr("width", 16) // Set the width of the pin
+      .attr("height", 16) // Set the height of the pin
+      .attr("x", (d) => projection([+d.lon, +d.lat])[0] - 8) // Adjust the x position
+      .attr("y", (d) => projection([+d.lon, +d.lat])[1] - 8) // Adjust the y position
       .attr("data-bs-toggle", "popover")
       .attr("data-bs-html", "true")
-      // .attr("data-bs-trigger", "hover")
-      .attr("data-bs-trigger", "manual") // Set trigger to manual
+      .attr("data-bs-trigger", "manual")
       .style("cursor", "pointer")
       .on("mouseover", function (event, d) {
         d3.select(this)
           .transition()
-          .duration(200) // Adjust as needed for animation speed
-          .attr("r", 8) // Adjust to desired hover size
-          .attr("fill", "blue"); // Change color if desired
+          .duration(200)
+          .attr("width", 32) // Enlarge the pin on hover
+          .attr("height", 32)
+          .attr("x", (d) => projection([+d.lon, +d.lat])[0] - 16) // Adjust x position for enlarged pin
+          .attr("y", (d) => projection([+d.lon, +d.lat])[1] - 16); // Adjust y position for enlarged pin
 
         // Find visitor data for the current park
         const visitorInfo = visitors.find((v) => v.name === d.name);
@@ -472,12 +545,14 @@ function renderMap() {
 
         popover.show();
       })
-      .on("mouseout", function () {
+      .on("mouseout", function (d) {
         d3.select(this)
           .transition()
-          .duration(200) // Adjust as needed for animation speed
-          .attr("r", 4) // Reset to original size
-          .attr("fill", "red"); // Reset to original color
+          .duration(200)
+          .attr("width", 16) // Reset to original size
+          .attr("height", 16)
+          .attr("x", (d) => projection([+d.lon, +d.lat])[0] - 8) // Adjust x position
+          .attr("y", (d) => projection([+d.lon, +d.lat])[1] - 8); // Adjust y position
 
         const popover = bootstrap.Popover.getInstance(this);
         if (popover) popover.hide();
@@ -495,4 +570,4 @@ const init = () => {
   renderMap();
 };
 
-window.addEventListener('load', init);
+window.addEventListener("load", init);
