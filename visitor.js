@@ -848,22 +848,6 @@ function createRegionChart(yearData) {
         .attr("dy", "1.5em")
         .text(total);
 
-    // Update the center text with the segment's value on hover
-    arcs.on("mouseover", function (event, d) {
-        centerText.text("");
-    })
-        .on("mouseout", function () {
-            centerText.append("tspan")
-                .attr("x", textX)
-                .attr("dy", "-0.7em")
-                .text("Total Arrival");
-
-            centerText.append("tspan")
-                .attr("x", textX)
-                .attr("dy", "1.5em")
-                .text(total);
-        });
-
     // Create pie chart segments
     arcs.append("path")
         .attr("d", arc)
@@ -871,6 +855,8 @@ function createRegionChart(yearData) {
         .style("stroke", "white")
         .style("cursor", "pointer")
         .on("mouseover", function (event, d) {
+
+            centerText.text("");
             // segment effect
             d3.select(this)
                 .transition()
@@ -895,6 +881,15 @@ function createRegionChart(yearData) {
                 .attr("x", textX)
                 .attr("dy", "1.5em")
                 .text(d.data.value);
+
+            var percentage = ((d.data.value / total) * 100).toFixed(2) + "%";
+
+            // Display the tooltip
+            d3.select("#tooltip")
+                .html(`<strong>${d.data.label}</strong><br>${percentage}`)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px")
+                .style("display", "block");
         })
         .on("mouseout", function () {
             // Remove the hover text on mouseout
@@ -905,6 +900,16 @@ function createRegionChart(yearData) {
                 .transition()
                 .duration(200)
                 .style("opacity", 1);
+
+            centerText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "-0.7em")
+                .text("Total Arrival");
+
+            centerText.append("tspan")
+                .attr("x", textX)
+                .attr("dy", "1.5em")
+                .text(total);
         })
 
     // Add a click event handler to the pie chart segments
@@ -1002,7 +1007,7 @@ function createRegionChart(yearData) {
         pieArcs.append("path")
             .attr("d", arc)
             .attr("fill", d => color(d.data.label))
-            .style("stroke", "white");
+            .style("stroke", "black");
 
         // Create a legend for the pie chart
         var legend = pieChartContainer.append("div")
