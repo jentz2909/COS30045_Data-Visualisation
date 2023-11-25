@@ -67,7 +67,7 @@ function updateCharts(selectedYear, chartType) {
                     .attr("type", "checkbox")
                     .attr("id", "domesticCheckbox")
                     .property("checked", true);
-                    
+
                 checkboxContainer.append("label")
                     .attr("for", "domesticCheckbox")
                     .style("color", "white")
@@ -862,7 +862,7 @@ function createRegionChart(yearData, regionMapping) {
         .attr("width", width)
         .attr("height", height)
         .append("g")
-        .attr("transform", `translate(${width / 2}, ${height / 2 + 15})`);
+        .attr("transform", `translate(${width / 2 - 68}, ${height / 2 + 15})`);
 
     // Define the arc function to create pie segments
     var arc = d3.arc()
