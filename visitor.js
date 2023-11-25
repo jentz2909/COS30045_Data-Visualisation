@@ -50,19 +50,12 @@ function updateCharts(selectedYear, chartType) {
             if (checkboxContainer.empty()) {
                 checkboxContainer = d3.select("#chart")
                     .append("div")
-                    .attr("id", "region-checkboxes")
-                    .style("position", "absolute")
-                    .style("background-color", "rgba(255, 255, 255, 0.8)")
-                    .style("padding", "10px")
-                    .style("border-radius", "5px")
-                    .style("box-shadow", "0 0 10px rgba(0, 0, 0, 0.2)");
+                    .attr("id", "region-checkboxes");
             }
-
 
             // Check if the checkbox exists, create if not
             var checkbox = checkboxContainer.select("input[type='checkbox']");
             if (checkbox.empty()) {
-
                 checkbox = checkboxContainer.append("input")
                     .attr("type", "checkbox")
                     .attr("id", "domesticCheckbox")
@@ -73,15 +66,26 @@ function updateCharts(selectedYear, chartType) {
                     .style("color", "white")
                     .text("Include Domestic");
 
-                // Add event listener for the checkbox
+                /// Add event listener for the checkbox
                 checkbox.on("change", function () {
-                    var isChecked = this.checked;
-                    if (isChecked) {
-                        createRegionChart(yearData, regionMappingWithDomestic);
-                    } else {
-                        createRegionChart(yearData, regionMappingWithoutDomestic);
-                    }
+                    handleCheckboxChange(yearSlider.value);
                 });
+
+                // Modify the handleCheckboxChange function to accept the selected year as an argument
+                function handleCheckboxChange(selectedYear) {
+                    // Filter data for the selected year
+                    var filteredYearData = data.filter(item => item.Year == selectedYear);
+
+                    // Update includeDomestic based on the checkbox state
+                    var includeDomestic = checkbox.property("checked");
+
+                    // Choose the appropriate region mapping based on the checkbox
+                    var regionMapping = includeDomestic ? regionMappingWithDomestic : regionMappingWithoutDomestic;
+
+                    // Create a chord chart using the filtered data and selected region mapping
+                    createRegionChart(filteredYearData, regionMapping);
+                    console.log("inside:", filteredYearData)
+                }
             }
 
             // Choose the appropriate region mapping based on the checkbox
@@ -90,8 +94,8 @@ function updateCharts(selectedYear, chartType) {
 
             // Create a chord chart using the filtered data and selected region mapping
             createRegionChart(yearData, regionMapping);
+            console.log("outside", yearData)
             showYearSlider(); // Show the year slider
-
         });
     }
     else {
@@ -912,7 +916,7 @@ function createRegionChart(yearData, regionMapping) {
     centerText.append("tspan")
         .attr("x", textX)
         .attr("dy", "-0.7em")
-        .text("Total Arrival");
+        .text("Total Visitors");
 
     centerText.append("tspan")
         .attr("x", textX)
@@ -996,7 +1000,7 @@ function createRegionChart(yearData, regionMapping) {
             centerText.append("tspan")
                 .attr("x", textX)
                 .attr("dy", "-0.7em")
-                .text("Total Arrival");
+                .text("Total Visitors");
 
             centerText.append("tspan")
                 .attr("x", textX)
@@ -1172,9 +1176,6 @@ function createRegionChart(yearData, regionMapping) {
 var yearSlider;
 var sliderTitle;
 var currentChartType = "pie";
-
-// Define a variable to keep track of whether the pie chart is currently displayed
-var isPieChartVisible = false;
 
 // Function to show the year slider
 function showYearSlider() {
