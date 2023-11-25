@@ -1095,15 +1095,13 @@ function createRegionChart(yearData, regionMapping) {
             .append("g")
             .attr("class", "pie-arc");
 
-
         // Define the custom color range
         var customColors = ["#F6EBEB", "#F8CDD2", "#FAAEBB", "#FC8FA8", "#FD7099", "#FF508C", "#FF3083"];
 
         // Create an ordinal scale with the custom color range
         var color = d3.scaleOrdinal()
-            .domain(pieData.map(d => d.label))
+            .domain(pieChartData.map(d => d.label))
             .range(customColors);
-
 
         // Add path elements to represent the segments
         pieArcs.append("path")
