@@ -45,9 +45,52 @@ function updateCharts(selectedYear, chartType) {
 
             console.log(yearData)
 
-            // Create a chord chart using the grouped data
-            createRegionChart(yearData);
-            showYearSlider() // Show the year slider
+            // Check if the checkbox container exists, create if not
+            var checkboxContainer = d3.select("#region-checkboxes");
+            if (checkboxContainer.empty()) {
+                checkboxContainer = d3.select("#chart")
+                    .append("div")
+                    .attr("id", "region-checkboxes")
+                    .style("position", "absolute")
+                    .style("background-color", "rgba(255, 255, 255, 0.8)")
+                    .style("padding", "10px")
+                    .style("border-radius", "5px")
+                    .style("box-shadow", "0 0 10px rgba(0, 0, 0, 0.2)");
+            }
+
+
+            // Check if the checkbox exists, create if not
+            var checkbox = checkboxContainer.select("input[type='checkbox']");
+            if (checkbox.empty()) {
+
+                checkbox = checkboxContainer.append("input")
+                    .attr("type", "checkbox")
+                    .attr("id", "domesticCheckbox")
+                    .property("checked", true);
+                    
+                checkboxContainer.append("label")
+                    .attr("for", "domesticCheckbox")
+                    .style("color", "white")
+                    .text("Include Domestic");
+
+                // Add event listener for the checkbox
+                checkbox.on("change", function () {
+                    var isChecked = this.checked;
+                    if (isChecked) {
+                        createRegionChart(yearData, regionMappingWithDomestic);
+                    } else {
+                        createRegionChart(yearData, regionMappingWithoutDomestic);
+                    }
+                });
+            }
+
+            // Choose the appropriate region mapping based on the checkbox
+            var includeDomestic = checkbox.property("checked");
+            var regionMapping = includeDomestic ? regionMappingWithDomestic : regionMappingWithoutDomestic;
+
+            // Create a chord chart using the filtered data and selected region mapping
+            createRegionChart(yearData, regionMapping);
+            showYearSlider(); // Show the year slider
 
         });
     }
@@ -62,6 +105,7 @@ function createPieChart(yearData) {
 
     // Clear any existing legend
     d3.select("#chart").html("");
+    d3.select("#region-checkboxes").html("");
     d3.select("#legend").html("");
 
     // Convert values to numbers and sum for each category (Domestic and Foreign)
@@ -253,6 +297,7 @@ function createPieChart(yearData) {
 function createBarChart(data) {
     // Clear any existing legend
     d3.select("#chart").html("");
+    d3.select("#region-checkboxes").html("");
     d3.select("#legend").html("");
 
     var margin = { top: 60, right: 50, bottom: 30, left: 100 };
@@ -425,8 +470,9 @@ function createBarChart(data) {
 
 // Function to create a line chart
 function createLineChart(yearData) {
-    // Clear any existing chart
+    // Clear any existing legend
     d3.select("#chart").html("");
+    d3.select("#region-checkboxes").html("");
     d3.select("#legend").html("");
 
     // Set the dimensions of the chart
@@ -734,22 +780,33 @@ function createLineChart(yearData) {
 
 }
 
+
+// Group all region (Include doemstic)
+var regionMappingWithDomestic = {
+    "Domestic": ["Peninsular Malaysia", "Sabah"],
+    "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
+    "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
+    "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
+    "Others": ["Others", "Arabs", "Canada", "USA", "Latin America"],
+    "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
+    "Oceania": ["Australia", "New Zealand"],
+};
+
+// Group all region (Exclude doemstic)
+var regionMappingWithoutDomestic = {
+    "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
+    "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
+    "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
+    "Others": ["Others", "Arabs", "Canada", "USA", "Latin America"],
+    "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
+    "Oceania": ["Australia", "New Zealand"],
+};
+
 // Function to create the chord diagram
-function createRegionChart(yearData) {
-    // Clear any existing chart
+function createRegionChart(yearData, regionMapping) {
+    // Clear any existing legend
     d3.select("#chart").html("");
     d3.select("#legend").html("");
-    
-
-    var regionMapping = {
-        "Domestic": ["Peninsular Malaysia", "Sabah"],
-        "Southeastern Asia": ["Singapore", "Brunei", "Philippines", "Thailand", "Indonesia"],
-        "Europe": ["United Kingdom", "Germany", "France", "Nor/Swe/Den/Fin", "Belg/Lux/Net", "Russia", "Others Europe"],
-        "Eastern Asia": ["China", "Japan", "Taiwan", "Hong Kong", "South Korea"],
-        "Others": ["Others", "Arabs", "Canada", "USA", "Latin America"],
-        "Southern Asia": ["Sri Lanka", "Bangladesh", "Pakistan", "India"],
-        "Oceania": ["Australia", "New Zealand"],
-    };
 
     // Initialize an empty object to store region values
     var regionData = {};
@@ -777,14 +834,27 @@ function createRegionChart(yearData) {
     var height = 500;
     var radius = Math.min(width, height) / 2;
 
-    // CustomeColor design
-    var customColors = ["#ff6961", "#ffb480", "#f8f38d", "#42d6a4", "#08cad1", "#9d94ff", "#D3D3D3"];
+    // Define fixed colors for each region
+    var regionColors = {
+        "Domestic": "#ff6961",
+        "Southeastern Asia": "#ffb480",
+        "Europe": "#f8f38d",
+        "Eastern Asia": "#42d6a4",
+        "Others": "#08cad1",
+        "Southern Asia": "#9d94ff",
+        "Oceania": "#D3D3D3"
+    };
 
+    // Map each region to its fixed color
+    var pieDataWithColors = pieData.map(d => ({
+        label: d.label,
+        value: d.value,
+        color: regionColors[d.label]
+    }));
 
     // Create a color scale for the pie chart segments
     var color = d3.scaleOrdinal()
-        .domain(pieData.map(d => d.label))
-        .range(customColors); // Use a color scheme
+        .range(pieDataWithColors.map(d => d.color));
 
     // Create an SVG element
     var svg = d3.select("#chart")
@@ -1097,7 +1167,6 @@ function createRegionChart(yearData) {
         .text((d) => d.label); // Display the exact label
 
     keys.exit().remove();
-
 }
 
 
