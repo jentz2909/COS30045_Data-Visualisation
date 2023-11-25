@@ -739,6 +739,7 @@ function createRegionChart(yearData) {
     // Clear any existing chart
     d3.select("#chart").html("");
     d3.select("#legend").html("");
+    
 
     var regionMapping = {
         "Domestic": ["Peninsular Malaysia", "Sabah"],
@@ -833,7 +834,7 @@ function createRegionChart(yearData) {
         .style("text-anchor", "middle")
         .style("dominant-baseline", "middle");
 
-    // Initialize the center text with the total sum value
+    // Initialize the center text with the label value
     var centerText = centerTextGroup.append("text")
         .attr("class", "center-text")
         .style("pointer-events", "none");
@@ -848,12 +849,31 @@ function createRegionChart(yearData) {
         .attr("dy", "1.5em")
         .text(total);
 
+    // Create tooltips div with a box
+    var tooltip = d3.select("#chart").append("div")
+        .attr("class", "tooltip")
+        .style("opacity", 0)
+        .style("position", "absolute")
+        .style("pointer-events", "none")
+        .style("background-color", "rgba(255, 255, 255, 0.8)")
+        .style("padding", "8px")
+        .style("border-radius", "5px")
+        .style("box-shadow", "0 0 10px rgba(0, 0, 0, 0.2)");
+
     // Create pie chart segments
     arcs.append("path")
         .attr("d", arc)
         .attr("fill", d => color(d.data.label))
         .style("stroke", "white")
         .style("cursor", "pointer")
+        .on("mousemove", function (event, d) {
+            // Calculate the percentage
+            var percentage = ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100;
+
+            tooltip.html(`${d.data.label}: ${percentage.toFixed(2)}%`)
+                .style("left", (event.pageX + 15) + "px") // Adjust the position as needed
+                .style("top", (event.pageY - 15) + "px");
+        })
         .on("mouseover", function (event, d) {
 
             centerText.text("");
@@ -882,14 +902,16 @@ function createRegionChart(yearData) {
                 .attr("dy", "1.5em")
                 .text(d.data.value);
 
-            var percentage = ((d.data.value / total) * 100).toFixed(2) + "%";
+            tooltip.transition()
+                .duration(200)
+                .style("opacity", 1);
 
-            // Display the tooltip
-            d3.select("#tooltip")
-                .html(`<strong>${d.data.label}</strong><br>${percentage}`)
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY - 10) + "px")
-                .style("display", "block");
+            // Calculate the percentage
+            var percentage = ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100;
+
+            tooltip.html(`${d.data.label}: ${percentage.toFixed(2)}%`)
+                .style("left", (event.pageX + 15) + "px")
+                .style("top", (event.pageY - 15) + "px");
         })
         .on("mouseout", function () {
             // Remove the hover text on mouseout
@@ -910,14 +932,24 @@ function createRegionChart(yearData) {
                 .attr("x", textX)
                 .attr("dy", "1.5em")
                 .text(total);
+
+            // Remove tooltip
+            tooltip.transition()
+                .duration(500)
+                .style("opacity", 0);
         })
 
     // Add a click event handler to the pie chart segments
     arcs.on("click", function (event, d) {
+
+        // Remove tooltip
+        tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
         // Check if the pie chart container is already present
         var pieChartContainer = d3.select("#pie-chart");
 
-        // Remove the existing pie chart if it's open
+        // Remove the existing pie chart if it open
         if (!pieChartContainer.empty()) {
             pieChartContainer.remove();
             return; // Exit the function to prevent creating a new one
@@ -1072,7 +1104,7 @@ function createRegionChart(yearData) {
 // Declare variables in a scope accessible by all functions
 var yearSlider;
 var sliderTitle;
-var currentChartType = "pie";
+var currentChartType = "region";
 
 // Define a variable to keep track of whether the pie chart is currently displayed
 var isPieChartVisible = false;
