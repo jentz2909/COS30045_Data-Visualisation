@@ -331,7 +331,7 @@ function createBarChart(data) {
     });
 
     // Determine the number of ticks on the y-axis dynamically based on maxTotal
-    var numTicks = Math.min(10, Math.ceil(maxTotal / 1000)); // Adjust the number of ticks as needed
+    var numTicks = Math.min(10, Math.ceil(maxTotal / 1000)); // Adjust the number of ticks
 
     // Adjust the yScale domain and ticks based on the maximum total value and numTicks
     var yScale = d3.scaleLinear()
@@ -941,7 +941,7 @@ function createRegionChart(yearData, regionMapping) {
             var percentage = ((d.endAngle - d.startAngle) / (2 * Math.PI)) * 100;
 
             tooltip.html(`${d.data.label}: ${percentage.toFixed(2)}%`)
-                .style("left", (event.pageX + 15) + "px") // Adjust the position as needed
+                .style("left", (event.pageX + 15) + "px") // Adjust the position
                 .style("top", (event.pageY - 15) + "px");
         })
         .on("mouseover", function (event, d) {
@@ -1173,7 +1173,7 @@ function createRegionChart(yearData, regionMapping) {
 // Declare variables in a scope accessible by all functions
 var yearSlider;
 var sliderTitle;
-var currentChartType = "region";
+var currentChartType = "pie";
 
 // Define a variable to keep track of whether the pie chart is currently displayed
 var isPieChartVisible = false;
